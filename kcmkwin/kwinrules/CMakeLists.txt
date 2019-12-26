@@ -1,6 +1,7 @@
 # KI18N Translation Domain for this library
 add_definitions(-DTRANSLATION_DOMAIN=\"kcmkwinrules\")
 add_definitions(-DKCMRULES)
+
 ########### next target ###############
 
 include_directories(../../)
@@ -15,7 +16,8 @@ set(kwinrules_SRCS
     main.cpp
     kwinsrc.cpp
     detectwidget.cpp
-    ${kwinrules_MOC_SRCS})
+    ${kwinrules_MOC_SRCS}
+)
 
 ki18n_wrap_ui(kwinrules_SRCS ruleslist.ui detectwidget.ui editshortcut.ui ruleswidgetbase.ui)
 
@@ -50,13 +52,39 @@ install(TARGETS kwin_rules_dialog DESTINATION ${LIBEXEC_INSTALL_DIR})
 
 ########### next target ###############
 
-set(kcm_kwinrules_PART_SRCS kcm.cpp ${kwinrules_SRCS})
+set(kcm_kwinrules_PART_SRCS
+    kcm.cpp
+    ${kwinrules_SRCS}
+)
 
 add_library(kcm_kwinrules MODULE ${kcm_kwinrules_PART_SRCS})
 
 target_link_libraries(kcm_kwinrules ${kcm_libs} ${kwin_kcm_rules_XCB_LIBS})
 
 install(TARGETS kcm_kwinrules DESTINATION ${PLUGIN_INSTALL_DIR})
+
+########### next target ###############
+
+set(kcmkwinrules_qml_SRCS
+    kcm_qml.cpp
+)
+
+add_library(kcm_kwinrules_qml MODULE ${kcmkwinrules_qml_SRCS})
+
+target_link_libraries(kcm_kwinrules_qml
+    KF5::I18n
+    KF5::CoreAddons
+    KF5::QuickAddons
+    Qt5::Quick
+)
+
+kcoreaddons_desktop_to_json(kcm_kwinrules_qml "kwinrules_qml.desktop" SERVICE_TYPES kcmodule.desktop)
+
+# This desktop file is installed only for retrocompatibility with sycoca
+install(FILES kwinrules_qml.desktop DESTINATION ${KDE_INSTALL_KSERVICES5DIR})
+install(TARGETS kcm_kwinrules_qml DESTINATION ${KDE_INSTALL_PLUGINDIR}/kcms)
+
+kpackage_install_package(package kcm_kwinrules_qml kcms)
 
 ########### install files ###############
 
