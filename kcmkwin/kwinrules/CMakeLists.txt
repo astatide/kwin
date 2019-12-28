@@ -8,6 +8,7 @@ set(kwinrules_MOC_HDRS yesnobox.h ../../cursor.h ../../plugins/platforms/x11/sta
 qt5_wrap_cpp(kwinrules_MOC_SRCS ${kwinrules_MOC_HDRS})
 set(kwinrules_SRCS
     ruleswidget.cpp
+    rulesmodel.cpp
     rulesdialog.cpp
     ruleslist.cpp
     main.cpp
@@ -28,6 +29,7 @@ set(kwin_kcm_rules_XCB_LIBS
 set(kcm_libs
     Qt5::Concurrent
     Qt5::X11Extras
+    Qt5::QuickWidgets
 
     KF5::Completion
     KF5::ConfigWidgets

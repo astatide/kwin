@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004 Lubos Lunak <l.lunak@kde.org>
+ * Copyright (c) 2010 Ismael Asensio <isma.af@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +20,7 @@
 #ifndef KWIN_RULESDIALOG_H
 #define KWIN_RULESDIALOG_H
 
+#include "rulesmodel.h"
 #include "ruleswidget.h"
 
 #include <QDialog>
@@ -35,6 +37,7 @@ class RulesDialog
 
 public:
     explicit RulesDialog(QWidget* parent = nullptr, const char* name = nullptr);
+
     Rules* edit(Rules* r, const QVariantMap& info, bool show_hints);
 
 protected:
@@ -42,6 +45,7 @@ protected:
 private Q_SLOTS:
     void displayHints();
 private:
+    RulesModel* m_rulesModel;
     RulesWidget* widget;
     Rules* rules;
 };

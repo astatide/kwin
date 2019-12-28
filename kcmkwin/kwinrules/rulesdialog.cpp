@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004 Lubos Lunak <l.lunak@kde.org>
+ * Copyright (c) 2010 Ismael Asensio <isma.af@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +20,8 @@
 #include "rulesdialog.h"
 #include "../../rules.h"
 
+#include <QQuickView>
+#include <QQmlContext>
 #include <QTimer>
 
 #include <KMessageBox>
@@ -36,12 +39,30 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     setWindowIcon(QIcon::fromTheme("preferences-system-windows-actions"));
     setLayout(new QVBoxLayout);
 
-    widget = new RulesWidget(this);
-    layout()->addWidget(widget);
+    //Init rules model
+    m_rulesModel = new RulesModel(this);
+    m_rulesModel->init();
 
-    QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    QQuickView *quickView = new QQuickView();
+    QQmlContext *qmlContext = quickView->rootContext();
+    qmlContext->setContextProperty("rulesModel", m_rulesModel);
+
+    quickView->setSource(QUrl::fromLocalFile(QStandardPaths::locate(
+        QStandardPaths::GenericDataLocation,
+        QStringLiteral(KWIN_NAME "/kwinruleseditor/main.qml"))));
+    quickView->setResizeMode(QQuickView::SizeRootObjectToView);
+
+    QWidget *quickWidget = QWidget::createWindowContainer(quickView, this);
+    quickWidget->setMinimumSize(QSize(480,300));
+    layout()->addWidget(quickWidget);
+
+    widget = new RulesWidget(this);
+//    layout()->addWidget(widget);
+
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttons, SIGNAL(accepted()), SLOT(accept()));
     connect(buttons, SIGNAL(rejected()), SLOT(reject()));
+
     layout()->addWidget(buttons);
 }
 
