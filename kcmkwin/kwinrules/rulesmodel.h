@@ -1,5 +1,5 @@
 /*
- * Copyright 2020  Ismael Asensio <isma.af@gmail.com>
+ * Copyright (c) 2020 Ismael Asensio <isma.af@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -17,8 +17,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #ifndef KWIN_RULES_MODEL_H
 #define KWIN_RULES_MODEL_H
+
+#include "ruleitem.h"
 
 #include <QAbstractListModel>
 #include <QObject>
@@ -26,13 +29,12 @@
 namespace KWin
 {
 
-class RuleItem;
-
 class RulesModel : public QAbstractListModel
 {
     Q_OBJECT
 
     Q_PROPERTY(QString ruleName READ ruleName WRITE setRuleName)
+    Q_PROPERTY(bool showWarning READ isWarningShown NOTIFY showWarningChanged)
 
 public:
     enum RulesRole {
@@ -40,72 +42,39 @@ public:
         IconRole = Qt::UserRole + 1,
         DescriptionRole = Qt::ToolTipRole,
         KeyRole = Qt::UserRole + 10,
-        ValueRole,
-        ValueTypeRole,
         SectionRole,
         EnabledRole,
+        PolicyRole,
+        ValueRole,
+        TypeRole,
     };
+
+    Q_ENUM (RuleType)
 
 public:
     explicit RulesModel(QObject *parent = nullptr);
-    ~RulesModel() override;
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QHash< int, QByteArray > roleNames() const override;
 
-    QModelIndex findRule(const QString &ruleKey) const;
-
     const QString ruleName();
     void setRuleName(const QString& ruleName);
+
+    bool isWarningShown();
 
 public slots:
     void init();
 
+signals:
+    void showWarningChanged(bool enabled);
+
+private:
+    int indexForKey(const QString &key) const;
+
 private:
     QList<RuleItem *> m_ruleList;
     QString m_ruleName;
-
-};
-
-
-class RuleItem : public QObject
-{
-public:
-    enum RuleType {
-        Boolean,
-        Integer,
-        String,
-        Position,
-        Size,
-    };
-
-    enum RulePolicy{
-        NoPolicy,
-        StringMatch,
-        SetRule,
-        ForceRule
-    };
-
-public:
-    RuleItem(const QString& key,
-             const QString& name,
-             const QString& iconName=QStringLiteral("window"));
-
-    QString key() const;
-    QString name() const;
-    QIcon icon() const;
-
-private:
-    QString m_key;
-    QString m_name;
-    QString m_iconName;
-    QString m_description;
-    QVariant m_value;
-    RuleType m_type;
-    RulePolicy m_policy;
-    QString m_section;
-    bool m_enabled = false;
 };
 
 }
