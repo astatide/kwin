@@ -46,6 +46,7 @@ private Q_SLOTS:
     void displayHints();
 private:
     RulesModel* m_rulesModel;
+    QWidget *quickWidget;
     RulesWidget* widget;
     Rules* rules;
 };

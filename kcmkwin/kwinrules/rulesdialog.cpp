@@ -22,6 +22,7 @@
 
 #include <QQuickView>
 #include <QQmlContext>
+#include <QPushButton>
 #include <QTimer>
 
 #include <KMessageBox>
@@ -52,16 +53,30 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
         QStringLiteral(KWIN_NAME "/kwinruleseditor/main.qml"))));
     quickView->setResizeMode(QQuickView::SizeRootObjectToView);
 
-    QWidget *quickWidget = QWidget::createWindowContainer(quickView, this);
-    quickWidget->setMinimumSize(QSize(480,300));
+    quickWidget = QWidget::createWindowContainer(quickView, this);
+    quickWidget->setMinimumSize(QSize(700, 740));
     layout()->addWidget(quickWidget);
 
     widget = new RulesWidget(this);
-//    layout()->addWidget(widget);
+    widget->hide();
+    layout()->addWidget(widget);
 
     QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttons, SIGNAL(accepted()), SLOT(accept()));
     connect(buttons, SIGNAL(rejected()), SLOT(reject()));
+
+    // Toggle QML and classic UI for debugging
+    QPushButton* toggleButton = buttons->addButton(QStringLiteral("Show classic UI"), QDialogButtonBox::ActionRole);
+    toggleButton->setCheckable(true);
+    connect(toggleButton, &QPushButton::toggled, this, [this](bool checked) {
+        if (checked) {
+            quickWidget->hide();
+            widget->show();
+        } else {
+            widget->hide();
+            quickWidget->show();
+        }
+    });
 
     layout()->addWidget(buttons);
 }
