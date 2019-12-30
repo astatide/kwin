@@ -22,7 +22,7 @@
 #include <KLocalizedString>
 #include <kwindowsystem.h>
 
-#include "ruleswidget.h"
+#include "rulesdialog.h"
 #include "../../rules.h"
 #include <QByteArray>
 

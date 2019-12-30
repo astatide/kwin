@@ -22,7 +22,7 @@
 #include <kconfig.h>
 #include <QFileDialog>
 
-#include "ruleswidget.h"
+#include "rulesdialog.h"
 
 namespace KWin
 {
