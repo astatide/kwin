@@ -21,12 +21,9 @@
 #include "ruleitem.h"
 #include <rules.h>
 
-#include <QDebug>
-#include <QIcon>
 #include <KLocalizedString>
 
 using namespace KWin;
-
 
 
 RuleItem::RuleItem(RuleItemPrivate *d)
@@ -35,7 +32,7 @@ RuleItem::RuleItem(RuleItemPrivate *d)
 }
 
 RuleItem::RuleItem(const QString &key,
-                   const RulePolicy policy,
+                   const RulePolicyType policyType,
                    const RuleType type,
                    const QString &name,
                    const QString &section,
@@ -50,15 +47,22 @@ RuleItem::RuleItem(const QString &key,
     d->m_icon = QIcon::fromTheme(iconName);
     d->m_description = description;
 
-    d->m_policy = policy;
+    d->m_policyType = policyType;
 
     d->m_type = type;
-    d->m_value = initialValue(type);
+    setValue(QVariant());
 }
 
 RuleItem::~RuleItem()
 {
     delete d;
+}
+
+void RuleItem::reset()
+{
+    setValue(QVariant());
+    setPolicy(0);
+    setEnabled(false);
 }
 
 QString RuleItem::key() const
@@ -86,16 +90,6 @@ QString RuleItem::description() const
     return d->m_description;
 }
 
-QVariant RuleItem::value() const
-{
-    return d->m_value;
-}
-
-void RuleItem::setValue(QVariant value)
-{
-    d->m_value = value;
-}
-
 bool RuleItem::isEnabled() const
 {
     return d->m_enabled;
@@ -106,43 +100,116 @@ void RuleItem::setEnabled(bool enabled)
     d->m_enabled = enabled;
 }
 
-RulePolicy RuleItem::policy() const
-{
-    return d->m_policy;
-}
-
 RuleType RuleItem::type() const
 {
     return d->m_type;
 }
 
+QVariant RuleItem::value() const
+{
+    return d->m_value;
+}
+
+void RuleItem::setValue(QVariant value)
+{
+    d->m_value = typedValue(value, d->m_type);
+}
+
+int RuleItem::policy() const
+{
+    if (d->m_policyType == RulePolicyType::NoPolicy) {
+        return Rules::Apply;
+    }
+    return d->m_policyValue;
+}
+
+void RuleItem::setPolicy(int policy)
+{
+    d->m_policyValue = policy;
+}
+
+RulePolicyType RuleItem::policyType() const
+{
+    return d->m_policyType;
+}
+
+QStringList RuleItem::policyModel() const
+{
+    QStringList policyList;
+/*
+    const auto intOptions = policyOptions(d->m_policyType);
+    for (const int option : intOptions)
+    {
+        if (d->m_policyType == RulePolicyType::StringMatch) {
+            switch (option):
+                case Rules::UnimportantMatch:
+                    policyList << i18n("");
+                case     Rules::ExactMatch,
+                    return i18n("");
+                case     Rules::SubstringMatch,
+                    return i18n("");
+                case     Rules::RegExpMatch,
+                    return i18n("");
+                };
+            case SetRule:
+            case ForceRule:
+                return QVector<int> {
+                    Rules::DontAffect,
+                    Rules::Apply,
+                    Rules::Remember,
+                    Rules::Force,
+                    Rules::ApplyNow,
+                    Rules::ForceTemporarily
+                };
+    }
+    */
+    return QStringList();
+}
+
 QString RuleItem::policyKey() const
 {
-    switch (d->m_policy) {
-    case NoPolicy:
-        return QString();
-    case StringMatch:
-        return QStringLiteral("%1match").arg(d->m_key);
-    case SetRule:
-    case ForceRule:
-        return QStringLiteral("%1rule").arg(d->m_key);
+    switch (d->m_policyType) {
+        case NoPolicy:
+            return QString();
+        case StringMatch:
+            return QStringLiteral("%1match").arg(d->m_key);
+        case SetRule:
+        case ForceRule:
+            return QStringLiteral("%1rule").arg(d->m_key);
     }
 
     return QString();
 }
 
-int RuleItem::policyValue() const {
-    return d->m_policyValue;
+QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
+{
+    switch (type) {
+        case Undefined:
+            return value;
+        case Boolean:
+            return value.toBool();
+        case String:
+            return value.toString();
+        case Integer:
+            return value.toInt();
+        case Option:
+            return value.toString();
+        case Flags:
+            return value.toUInt();
+        case Percentage:
+            return value.toUInt();
+        case Coordinate:
+            return value.toString();
+        case Shortcut:
+            return value.toString();
+    }
+
+    return value;
 }
 
-void RuleItem::setPolicyValue(int policyValue)
+QVector<int> RuleItem::policyOptions(RulePolicyType policyType)
 {
-    d->m_policyValue = policyValue;
-}
-
-QVector<int> RuleItem::policyOptions(RulePolicy policy)
-{
-    switch (policy) {
+    switch (policyType) {
     case NoPolicy:
         return QVector<int> {};
     case StringMatch:
@@ -171,31 +238,6 @@ QVector<int> RuleItem::policyOptions(RulePolicy policy)
 
     return QVector<int> {};
 }
-
-QVariant RuleItem::initialValue(RuleType type)
-{
-    switch (type) {
-        case Undefined:
-            return QVariant();
-        case Boolean:
-            return bool(true);
-        case String:
-            return QString("test");
-        case Integer:
-            return int(5);
-        case Option:
-            return QString();
-        case Flags:
-            return uint();
-        case Percentage:
-            return uint(50);
-        case Shortcut:
-            return QString();
-    }
-
-    return QVariant();
-}
-
 
 /*
 static const int set_rule_to_combo[] = {

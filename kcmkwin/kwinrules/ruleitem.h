@@ -21,9 +21,9 @@
 #ifndef KWIN_RULEITEM_H
 #define KWIN_RULEITEM_H
 
-#include <QAbstractListModel>
-#include <QObject>
 #include <QIcon>
+#include <QObject>
+#include <QVariant>
 
 namespace KWin
 {
@@ -38,10 +38,11 @@ enum RuleType {
     Option,
     Flags,
     Percentage,
+    Coordinate,
     Shortcut
 };
 
-enum RulePolicy{
+enum RulePolicyType {
     NoPolicy,
     StringMatch,
     SetRule,
@@ -55,7 +56,7 @@ public:
     ~RuleItem();
 
     RuleItem(const QString &key,
-             const RulePolicy policy,
+             const RulePolicyType policyType,
              const RuleType type,
              const QString &name,
              const QString &section,
@@ -72,56 +73,37 @@ public:
     QVariant value() const;
     RuleType type() const;
 
-    RulePolicy policy() const;
+    int policy() const;
+    RulePolicyType policyType() const;
+    QStringList policyModel() const;
     QString policyKey() const;
-    int policyValue() const;
 
     void setEnabled(bool enabled);
-    void setPolicyValue(int policyValue);
     void setValue(QVariant value);
+    void setPolicy(int policy);
+    void reset();
 
 protected:
     RuleItemPrivate *d;
 
 private:
-    static QVariant initialValue(RuleType type);
-    static QVector<int> policyOptions(RulePolicy policy);
+    static QVariant typedValue(const QVariant &value, const RuleType type);
+    static QVector<int> policyOptions(RulePolicyType policyType);
 };
 
 class RuleItemPrivate
 {
-/*
-public:
-    RuleItemPrivate();
-    RuleItemPrivate(const QString &key,
-                    const RulePolicy policy,
-                    const QString &name,
-                    const QString &section,
-                    const QString &iconName=QStringLiteral("window"),
-                    const QString &description=QString());
-*/
-
 public:
     QString m_key;
     QString m_name;
     QString m_section;
-    RuleType m_type;
-    RulePolicy m_policy;
     QIcon m_icon;
     QString m_description;
     bool m_enabled = false;
-    int m_policyValue = 0;
     QVariant m_value;
-};
-
-class BinaryRuleItem : public RuleItem
-{
-public:
-    using RuleItem::RuleItem;
-    BinaryRuleItem(RuleItemPrivate *d):RuleItem(d) { d->m_value = true; };
-
-    bool value() { return static_cast<bool>(d->m_value.toBool()); }
-    void setValue(bool value) { d->m_value = static_cast<bool>(value); }
+    RuleType m_type;
+    RulePolicyType m_policyType;
+    int m_policyValue = 0;
 };
 
 }

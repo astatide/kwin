@@ -26,6 +26,8 @@
 #include <QAbstractListModel>
 #include <QObject>
 
+#include <KConfig>
+
 namespace KWin
 {
 
@@ -33,7 +35,7 @@ class RulesModel : public QAbstractListModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString ruleName READ ruleName WRITE setRuleName)
+    Q_PROPERTY(QString ruleName READ ruleName WRITE setRuleName NOTIFY ruleNameChanged)
     Q_PROPERTY(bool showWarning READ isWarningShown NOTIFY showWarningChanged)
 
 public:
@@ -44,22 +46,29 @@ public:
         KeyRole = Qt::UserRole + 10,
         SectionRole,
         EnabledRole,
-        PolicyRole,
         ValueRole,
         TypeRole,
+        PolicyRole,
+        PolicyModelRole
     };
-
-    Q_ENUM (RuleType)
 
 public:
     explicit RulesModel(QObject *parent = nullptr);
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QHash< int, QByteArray > roleNames() const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    bool setData(const QModelIndex & index, const QVariant & value, int role) override;
 
-    const QString ruleName();
-    void setRuleName(const QString& ruleName);
+    RuleItem *ruleByKey(const QString &key) const;
+    RuleItem *operator[](const QString &key) const;
+
+    const QString ruleName() const;
+    void setRuleName(const QString& name);
+
+    void resetModel();
+    void readFromConfig(KConfigGroup *config);
+    void writeToConfig(KConfigGroup *config);
 
     bool isWarningShown();
 
@@ -67,9 +76,11 @@ public slots:
     void init();
 
 signals:
-    void showWarningChanged(bool enabled);
+    void ruleNameChanged();
+    void showWarningChanged();
 
 private:
+    void initRuleList();
     int indexForKey(const QString &key) const;
 
 private:

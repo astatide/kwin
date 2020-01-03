@@ -25,58 +25,97 @@ import org.kde.kirigami 2.10 as Kirigami
 
 ColumnLayout {
 
-    Kirigami.InlineMessage {
-        text: i18n("You have specified the window class as unimportant.\n" +
-        "This means the settings will possibly apply to windows from all applications. " +
-        "If you really want to create a generic setting, it is recommended you at least " +
-        "limit the window types to avoid special window types.")
-        visible: rulesModel.showWarning
-        Layout.fillWidth: true
+    RowLayout {
+        Kirigami.Heading {
+            text: i18n("Rule description:")
+            level: 3
+        }
+        QQC2.TextField {
+            property bool isTextEdited: false
+            text: rulesModel.ruleName
+            onTextEdited: { isTextEdited = true; }
+            onEditingFinished: {
+                if (isTextEdited) {
+                    print ("Rule Name changed to: " + text)
+                    rulesModel.ruleName = text;
+                }
+                isTextEdited = false;
+            }
+            Layout.fillWidth: true
+        }
     }
 
     QQC2.Frame {
         Layout.fillWidth: true
         Layout.fillHeight: true
+        Layout.margins: 0
 
-        ColumnLayout {
+        ListView {
+            id: enabledRulesView
+
             anchors.fill: parent
+            anchors.margins: 0
+            boundsBehavior: Flickable.StopAtBounds
+            clip: true
+            focus: true
 
-            ListView {
-                id: enabledRulesView
+            QQC2.ScrollBar.vertical: QQC2.ScrollBar { z: 100 }
 
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                boundsBehavior: Flickable.StopAtBounds
-                clip: true
-                focus: true
+            model: rulesModel
+            delegate: ruleDelegate
 
-                QQC2.ScrollBar.vertical: QQC2.ScrollBar { }
-
-                model: rulesModel
-                delegate: ruleDelegate
-
-                section.delegate: Kirigami.ListSectionHeader { label: section }
-                section.property: "section"
+            section.delegate: Kirigami.ListSectionHeader { label: section }
+            section.property: "section"
+/*
+            header : {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                z: 200
             }
+            headerPositioning: ListView.OverlayFooter
+*/
+        }
 
+    }
+
+    RowLayout {
+        id: viewActionBar
             QQC2.TextField {
                 id: searchBar
                 Layout.fillWidth: true
-
-                placeholderText: i18n("Filter")
+                placeholderText: i18n("Filter...")
             }
-        }
+            QQC2.ToolButton {
+                id: editMode
+                icon.name: 'list-add'
+                checkable: true
+                text: i18n("Add/Remove Rules")
+            }
+    }
+
+    Kirigami.InlineMessage {
+        id: warningMessage
+        text: i18n("You have specified the window class as unimportant.\n" +
+                   "This means the settings will possibly apply to windows from all " +
+                   "applications. If you really want to create a generic setting, it is " +
+                   "recommended you at least limit the window types to avoid special window " +
+                   "types.")
+        visible: rulesModel.showWarning
+        Layout.fillWidth: true
     }
 
     Component {
         id: ruleDelegate
 
         Kirigami.BasicListItem {
-            id: ruleItem
-            icon: model.icon
-            label: '<b>' + name + '</b> <i>(' + key + ')</i>'
+            height: visible ? 2.1 * Kirigami.Units.gridUnit : 0
 
-            height: 2.5 * Kirigami.Units.gridUnit
+            icon: model.icon
+            label: model.name
+            font.bold: model.enabled
+
+            visible: model.enabled || editMode.checked
+
             anchors {
                 left: parent.left
                 right: parent.right
@@ -88,6 +127,166 @@ ColumnLayout {
             RowLayout {
 
                 spacing: Kirigami.Units.smallSpacing
+
+                Loader {
+                    id: valueEditor
+                    focus: true
+                    width: 12 * Kirigami.Units.gridUnit;
+                    enabled: model.enabled && !editMode.checked //&& model.policy > 0
+                    //visible: model.enabled
+
+                    property var modelValue: model.value
+                    signal valueChanged(var value)
+
+                    sourceComponent: {
+                        switch (model.type) {
+                            case 1: return booleanEditor          //RuleType.Boolean
+                            case 2: return stringEditor           //RuleType.String
+                            case 3: return integerEditor          //RuleType.Integer
+                            case 4: return optionEditor           //RuleType.Option
+                            case 5: return flagsEditor            //RuleType.Flags
+                            case 6: return percentageEditor       //RuleType.Percentage
+                            case 7: return coordinateEditor       //RuleType.Coordinate
+                            case 8: return shortcutEditor         //RuleType.Shortcut
+                            default: return notImplementedEditor
+                        }
+                    }
+
+                    onLoaded: {
+                        if (item.font) { item.font.bold = false; }
+                        item.width = valueEditor.width;
+                        item.anchors.right = valueEditor.right;
+                        item.anchors.margins = 0;
+                        item.height = 1.6 * Kirigami.Units.gridUnit;
+                        item.Layout.alignment = Qt.AlignVCenter + Qt.AlignRight;
+                        item.focus = true;
+                    }
+
+                    onValueChanged: {
+                        print ("Rule changed: " + model.key + " = " + value)
+                        model.value = value
+                    }
+
+                    onFocusChanged: { valueEditor.focus = focus; }
+
+                    Component {
+                        id: notImplementedEditor
+                        QQC2.Label {
+                            text: "<i>To be implemented</i>"
+                        }
+                    }
+
+                    Component {
+                        id: booleanEditor
+                        QQC2.Switch {
+                            text: checked ? i18n("Yes") : i18n("No")
+                            checked: modelValue
+                            onToggled: valueEditor.valueChanged(checked)
+                        }
+                    }
+
+                    Component {
+                        id: stringEditor
+                        QQC2.TextField {
+                            property bool isTextEdited: false
+                            text: modelValue
+                            onTextEdited: { isTextEdited = true; }
+                            onEditingFinished: {
+                                if (isTextEdited) { valueEditor.valueChanged(text); }
+                                isTextEdited = false;
+                            }
+                        }
+                    }
+
+                    Component {
+                        id: integerEditor
+                        QQC2.SpinBox {
+                            editable: true
+                            value: modelValue
+                            onValueModified: valueEditor.valueChanged(value)
+                        }
+                    }
+
+                    Component {
+                        id: optionEditor
+                        QQC2.ComboBox {
+                            flat: true
+                            onCurrentTextChanged: valueEditor.valueChanged(currentText)
+                        }
+                    }
+
+                    Component {
+                        id: flagsEditor
+                        RowLayout {
+                            spacing: 0
+                            Repeater {
+                                model: 10
+                                QQC2.ToolButton {
+                                    property int bit: index
+                                    icon.name: "window-duplicate"
+                                    checkable: true
+                                    checked: ((modelValue & (1 << bit)) >> bit) == 1
+                                    onToggled: {
+                                        valueEditor.valueChanged((modelValue & ~(1 << bit)) | (checked << bit));
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Component {
+                        id: percentageEditor
+                        RowLayout {
+                            QQC2.Slider {
+                                id: slider
+                                Layout.fillWidth: true
+                                from: 0
+                                to: 100
+                                value: modelValue
+                                onMoved: valueEditor.valueChanged(Math.round(slider.value))
+                            }
+                            QQC2.Label {
+                                text: i18n("%1 %", Math.round(slider.value))
+                                width: 2 * Kirigami.Units.gridUnit
+                            }
+                        }
+                    }
+
+                    Component {
+                        id: coordinateEditor
+                        RowLayout {
+                            QQC2.SpinBox {
+                                id: coord_x
+                                editable: true
+                                Layout.fillWidth: true
+                                from: 0
+                                to: 4098
+                                value: modelValue ? modelValue.split(",")[0] : 0
+                                onValueModified: valueEditor.valueChanged(value)
+                            }
+                            QQC2.Label {
+                                text: i18nc("(x, y) coordinates separator in size/position"," x ")
+                            }
+                            QQC2.SpinBox {
+                                id: coord_y
+                                editable: true
+                                from: 0
+                                to: 4098
+                                Layout.fillWidth: true
+                                value: modelValue ? modelValue.split(",")[1] : 0
+                                onValueModified: valueEditor.valueChanged(value)
+                            }
+                        }
+                    }
+
+                    Component {
+                        id: shortcutEditor
+                        QQC2.Button {
+                            icon.name: "key-enter"
+                            text: modelValue ? modelValue : i18n("Set shortcut ...")
+                        }
+                    }
+                }
 
                 QQC2.ToolButton {
                     id: descriptionButton
@@ -101,87 +300,22 @@ ColumnLayout {
                     QQC2.ToolTip.visible: down || hovered
                 }
 
-                Loader {
-                    id: fieldEditor
-                    focus: true
-
-                    property var value: model.value
-
-                    sourceComponent: {
-                        switch (model.type) {
-                            case 1: //RuleType.Boolean
-                                return booleanEditor
-                            case 2: //RuleType.String
-                                return textEditor
-                            case 3: //RuleType.Integer
-                                return integerEditor
-                            case 4: //RuleType.Option
-                                return optionEditor
-                            case 6: //RuleType.Percentage
-                                return percentageEditor
-                            default:
-                                return notImplementedEditor
-                        }
-                    }
-
-                    onLoaded: {
-                        item.width = 8 * Kirigami.Units.gridUnit;
-                        item.Layout.alignment = Qt.AlignVCenter + Qt.AlignRight;
+                QQC2.CheckBox {
+                    id: toggleItemEnabled
+                    visible: editMode.checked
+                    checked: model.enabled
+                    onToggled: { model.enabled = checked; }
+                }
+                /*
+                QQC2.ToolButton {
+                    icon.name: model.enabled? 'list-remove' : 'list-add-symbolic'
+                    icon.color: model.enabled? 'red' : 'green'
+                    onClicked: {
+                        model.enabled = !model.enabled ;
                     }
                 }
+                */
             }
         }
     }
-
-    Component {
-        id: notImplementedEditor
-        QQC2.Label {
-            text: "[ :D ]"
-        }
-    }
-
-    Component {
-        id: booleanEditor
-        QQC2.Switch {
-            checked: value
-        }
-    }
-
-    Component {
-        id: textEditor
-        QQC2.TextField {
-            text: value
-        }
-    }
-
-    Component {
-        id: integerEditor
-        QQC2.SpinBox {
-            value: value
-            editable: true
-        }
-    }
-
-    Component {
-        id: optionEditor
-        QQC2.ComboBox {
-        }
-    }
-
-    Component {
-        id: percentageEditor
-        RowLayout {
-            QQC2.Slider {
-                id: slider
-                Layout.fillWidth: true
-                from: 0
-                to: 100
-                value: value
-            }
-            QQC2.Label {
-                text: i18n("%1 %", Math.round(slider.value))
-            }
-        }
-    }
-
 }

@@ -23,8 +23,10 @@
 #include <QQuickView>
 #include <QQmlContext>
 #include <QPushButton>
+#include <QTemporaryFile>
 #include <QTimer>
 
+#include <KConfig>
 #include <KMessageBox>
 
 
@@ -54,7 +56,7 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     quickView->setResizeMode(QQuickView::SizeRootObjectToView);
 
     quickWidget = QWidget::createWindowContainer(quickView, this);
-    quickWidget->setMinimumSize(QSize(700, 740));
+    quickWidget->setMinimumSize(QSize(500, 540));
     layout()->addWidget(quickWidget);
 
     widget = new RulesWidget(this);
@@ -87,6 +89,24 @@ Rules* RulesDialog::edit(Rules* r, const QVariantMap& info, bool show_hints)
 {
     rules = r;
     widget->setRules(rules);
+
+    if (r == nullptr) {
+        m_rulesModel->init();
+    } else {
+        QTemporaryFile tempFile;
+        if (!tempFile.open()) {
+            return nullptr;
+        }
+
+        const QString tempPath = tempFile.fileName();
+        KConfig config(tempPath, KConfig::SimpleConfig);
+        KConfigGroup kcg(&config, "temporal");
+
+        rules->write(kcg);
+
+        m_rulesModel->readFromConfig(&kcg);
+    }
+
     if (!info.isEmpty())
     {
         widget->prepareWindowSpecific(info);
