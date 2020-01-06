@@ -23,6 +23,8 @@
 #include <rules.h>
 
 #include <QIcon>
+#include <QTemporaryFile>
+
 #include <KLocalizedString>
 
 using namespace KWin;
@@ -451,7 +453,7 @@ void RulesModel::readFromConfig(KConfigGroup *config)
     emit showWarningChanged();
 }
 
-void RulesModel::writeToConfig(KConfigGroup *config)
+void RulesModel::writeToConfig(KConfigGroup *config) const
 {
     config->writeEntry(QLatin1String("Description"), ruleName());
 
@@ -470,4 +472,39 @@ void RulesModel::writeToConfig(KConfigGroup *config)
             }
         }
     }
+}
+
+void RulesModel::importFromRules(Rules* rules)
+{
+    if (rules == nullptr) {
+        init();
+        return;
+    }
+
+    QTemporaryFile tempFile;
+    if (!tempFile.open()) {
+        return;
+    }
+    const QString tempPath = tempFile.fileName();
+    KConfig config(tempPath, KConfig::SimpleConfig);
+    KConfigGroup cfg(&config, QLatin1String("KWinRule_temp"));
+
+    rules->write(cfg);
+    readFromConfig(&cfg);
+}
+
+Rules *RulesModel::exportToRules() const
+{
+    QTemporaryFile tempFile;
+    if (!tempFile.open()) {
+        return nullptr;
+    }
+    const QString tempPath = tempFile.fileName();
+    KConfig config(tempPath, KConfig::SimpleConfig);
+    KConfigGroup cfg(&config, QLatin1String("KWinRule_temp"));
+
+    writeToConfig(&cfg);
+
+    Rules *rules = new Rules(cfg);
+    return rules;
 }

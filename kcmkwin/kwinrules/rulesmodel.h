@@ -22,6 +22,7 @@
 #define KWIN_RULES_MODEL_H
 
 #include "ruleitem.h"
+#include <rules.h>
 
 #include <QAbstractListModel>
 #include <QObject>
@@ -66,9 +67,11 @@ public:
     const QString ruleName() const;
     void setRuleName(const QString& name);
 
-    void resetModel();
     void readFromConfig(KConfigGroup *config);
-    void writeToConfig(KConfigGroup *config);
+    void writeToConfig(KConfigGroup *config) const;
+
+    void importFromRules(Rules *rules);
+    Rules *exportToRules() const;
 
     bool isWarningShown();
 

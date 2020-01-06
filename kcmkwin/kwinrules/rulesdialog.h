@@ -44,7 +44,9 @@ protected:
     void accept() override;
 private Q_SLOTS:
     void displayHints();
+    void toggleUI(bool showQuickUI);
 private:
+    bool isQuickUIShown = true;
     RulesModel* m_rulesModel;
     QWidget *quickWidget;
     RulesWidget* widget;

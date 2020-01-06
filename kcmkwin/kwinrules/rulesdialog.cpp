@@ -23,7 +23,6 @@
 #include <QQuickView>
 #include <QQmlContext>
 #include <QPushButton>
-#include <QTemporaryFile>
 #include <QTimer>
 
 #include <KConfig>
@@ -42,9 +41,8 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     setWindowIcon(QIcon::fromTheme("preferences-system-windows-actions"));
     setLayout(new QVBoxLayout);
 
-    //Init rules model
+    //Init model and QML QuickView
     m_rulesModel = new RulesModel(this);
-    m_rulesModel->init();
 
     QQuickView *quickView = new QQuickView();
     QQmlContext *qmlContext = quickView->rootContext();
@@ -57,10 +55,11 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
 
     quickWidget = QWidget::createWindowContainer(quickView, this);
     quickWidget->setMinimumSize(QSize(500, 540));
+    quickWidget->setVisible(isQuickUIShown);
     layout()->addWidget(quickWidget);
 
     widget = new RulesWidget(this);
-    widget->hide();
+    widget->setVisible(!isQuickUIShown);
     layout()->addWidget(widget);
 
     QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -68,19 +67,29 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     connect(buttons, SIGNAL(rejected()), SLOT(reject()));
 
     // Toggle QML and classic UI for debugging
-    QPushButton* toggleButton = buttons->addButton(QStringLiteral("Show classic UI"), QDialogButtonBox::ActionRole);
+    QPushButton* toggleButton = buttons->addButton(QStringLiteral("Toggle classic/new UI"), QDialogButtonBox::ActionRole);
     toggleButton->setCheckable(true);
-    connect(toggleButton, &QPushButton::toggled, this, [this](bool checked) {
-        if (checked) {
-            quickWidget->hide();
-            widget->show();
-        } else {
-            widget->hide();
-            quickWidget->show();
-        }
-    });
-
+    toggleButton->setChecked(isQuickUIShown);
+    connect(toggleButton, &QPushButton::toggled, this, &RulesDialog::toggleUI);
     layout()->addWidget(buttons);
+}
+
+void RulesDialog::toggleUI(bool showQuickUI)
+{
+    if (isQuickUIShown == showQuickUI) {
+        return;
+    }
+    isQuickUIShown = showQuickUI;
+
+    if (showQuickUI) {
+        m_rulesModel->importFromRules(widget->rules());
+        widget->hide();
+        quickWidget->show();
+    } else {
+        widget->setRules(m_rulesModel->exportToRules());
+        quickWidget->hide();
+        widget->show();
+    }
 }
 
 // window is set only for Alt+F3/Window-specific settings, because the dialog
@@ -90,22 +99,7 @@ Rules* RulesDialog::edit(Rules* r, const QVariantMap& info, bool show_hints)
     rules = r;
     widget->setRules(rules);
 
-    if (r == nullptr) {
-        m_rulesModel->init();
-    } else {
-        QTemporaryFile tempFile;
-        if (!tempFile.open()) {
-            return nullptr;
-        }
-
-        const QString tempPath = tempFile.fileName();
-        KConfig config(tempPath, KConfig::SimpleConfig);
-        KConfigGroup kcg(&config, "temporal");
-
-        rules->write(kcg);
-
-        m_rulesModel->readFromConfig(&kcg);
-    }
+    m_rulesModel->importFromRules(rules);
 
     if (!info.isEmpty())
     {
@@ -113,7 +107,9 @@ Rules* RulesDialog::edit(Rules* r, const QVariantMap& info, bool show_hints)
     }
     if (show_hints)
         QTimer::singleShot(0, this, SLOT(displayHints()));
+
     exec();
+
     return rules;
 }
 
@@ -132,9 +128,13 @@ void RulesDialog::displayHints()
 
 void RulesDialog::accept()
 {
-    if (!widget->finalCheck())
-        return;
-    rules = widget->rules();
+    if (isQuickUIShown) {
+        rules = m_rulesModel->exportToRules();
+    } else {
+        if (!widget->finalCheck())
+            return;
+        rules = widget->rules();
+    }
     QDialog::accept();
 }
 
