@@ -44,7 +44,7 @@ RuleItem::RuleItem(const QString &key,
     d->m_key = key;
     d->m_name = name;
     d->m_section = section;
-    d->m_icon = QIcon::fromTheme(iconName);
+    d->m_iconName = iconName;
     d->m_description = description;
 
     d->m_policyType = policyType;
@@ -80,9 +80,14 @@ QString RuleItem::section() const
     return d->m_section;
 }
 
+QString RuleItem::iconName() const
+{
+    return d->m_iconName;
+}
+
 QIcon RuleItem::icon() const
 {
-    return d->m_icon;
+    return QIcon::fromTheme(d->m_iconName);
 }
 
 QString RuleItem::description() const

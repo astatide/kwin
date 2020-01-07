@@ -42,15 +42,17 @@ class RulesModel : public QAbstractListModel
 public:
     enum RulesRole {
         NameRole = Qt::DisplayRole,
-        IconRole = Qt::UserRole + 1,
         DescriptionRole = Qt::ToolTipRole,
-        KeyRole = Qt::UserRole + 10,
+        IconRole = Qt::DecorationRole,
+        IconNameRole = Qt::UserRole + 1,
+        KeyRole,
         SectionRole,
         EnabledRole,
         ValueRole,
         TypeRole,
         PolicyRole,
-        PolicyModelRole
+        PolicyModelRole,
+        OptionsModelRole
     };
 
 public:

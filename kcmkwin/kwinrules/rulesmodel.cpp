@@ -41,6 +41,7 @@ QHash< int, QByteArray > RulesModel::roleNames() const
         {KeyRole,           QByteArrayLiteral("key")},
         {NameRole,          QByteArrayLiteral("name")},
         {IconRole,          QByteArrayLiteral("icon")},
+        {IconNameRole,      QByteArrayLiteral("iconName")},
         {SectionRole,       QByteArrayLiteral("section")},
         {DescriptionRole,   QByteArrayLiteral("description")},
         {EnabledRole,       QByteArrayLiteral("enabled")},
@@ -48,6 +49,7 @@ QHash< int, QByteArray > RulesModel::roleNames() const
         {TypeRole,          QByteArrayLiteral("type")},
         {PolicyRole,        QByteArrayLiteral("policy")},
         {PolicyModelRole,   QByteArrayLiteral("policyModel")},
+        {OptionsModelRole,  QByteArrayLiteral("options")},
     });
     return roles;
 }
@@ -73,6 +75,8 @@ QVariant RulesModel::data(const QModelIndex &index, int role) const
         return rule->name();
     case IconRole:
         return rule->icon();
+    case IconNameRole:
+        return rule->iconName();
     case DescriptionRole:
         return rule->description();
     case SectionRole:

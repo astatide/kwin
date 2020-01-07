@@ -66,15 +66,17 @@ public:
     QString key() const;
     QString name() const;
     QString section() const;
-    bool isEnabled() const;
+    QString iconName() const;
     QIcon icon() const;
     QString description() const;
 
-    QVariant value() const;
-    RuleType type() const;
+    bool isEnabled() const;
 
-    int policy() const;
+    RuleType type() const;
+    QVariant value() const;
+
     RulePolicyType policyType() const;
+    int policy() const;
     QStringList policyModel() const;
     QString policyKey() const;
 
@@ -97,15 +99,15 @@ public:
     QString m_key;
     QString m_name;
     QString m_section;
-    QIcon m_icon;
+    QString m_iconName;
     QString m_description;
     bool m_enabled = false;
-    QVariant m_value;
     RuleType m_type;
+    QVariant m_value;
     RulePolicyType m_policyType;
     int m_policyValue = 0;
 };
 
-}
+}   //namespace
 
 #endif  //KWIN_RULEITEM_H
