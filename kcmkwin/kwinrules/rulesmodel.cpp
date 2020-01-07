@@ -104,17 +104,22 @@ bool RulesModel::setData(const QModelIndex & index, const QVariant & value, int 
     RuleItem *rule = m_ruleList.at(index.row());
 
     switch (role) {
-        case EnabledRole:
-            rule->setEnabled(value.toBool());
+    case EnabledRole:
+        // from <rules.cpp>: 'wmclass' and 'wmclasscomplete' are always enabled
+        if (rule->key().startsWith(QLatin1String("wmclass"))) {
+            rule->setEnabled(true);
             break;
-        case ValueRole:
-            rule->setValue(value);
-            break;
-        case PolicyRole:
-            rule->setPolicy(value.toInt());
-            break;
-        default:
-            return false;
+        }
+        rule->setEnabled(value.toBool());
+        break;
+    case ValueRole:
+        rule->setValue(value);
+        break;
+    case PolicyRole:
+        rule->setPolicy(value.toInt());
+        break;
+    default:
+        return false;
     }
 
     emit dataChanged(index, index, QVector<int>{role});
