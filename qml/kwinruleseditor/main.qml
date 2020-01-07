@@ -93,6 +93,7 @@ ColumnLayout {
             }
     }
 
+    // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
     Kirigami.InlineMessage {
         id: warningMessage
         text: i18n("You have specified the window class as unimportant.\n" +
@@ -107,33 +108,72 @@ ColumnLayout {
     Component {
         id: ruleDelegate
 
-        Kirigami.BasicListItem {
-            height: visible ? 2.1 * Kirigami.Units.gridUnit : 0
+        //Kirigami.AbstractListItem {
+        // !! crashes on load due to segmentation fault
+        // Traceback is not much helpful (Crashing... crashRecursionCounter = 2)
+        QQC2.ItemDelegate {
+            id: ruleDelegateItem
 
-            icon: model.icon
-            label: model.name
-            font.bold: model.enabled
+            enabled: model.enabled || editMode.checked
+            //visible: model.enabled || editMode.checked
+            height: enabled ? 2.1 * Kirigami.Units.gridUnit : 0
+            opacity: (enabled) ? 1 : 0
+            focus: true
 
-            visible: model.enabled || editMode.checked
+            Behavior on height {
+                PropertyAnimation { duration: 2 * Kirigami.Units.longDuration }
+            }
+            Behavior on opacity {
+                PropertyAnimation {}
+            }
 
             anchors {
                 left: parent.left
                 right: parent.right
             }
+            /*
+            background: Rectangle {
+                anchors.fill: parent
+                Kirigami.Theme.colorSet: Kirigami.Theme.View
+                //TODO: Use system colors
+                // selected(focus) / hover / enabled + alternate/ disabled
+                //color: model.enabled ? Kirigami.Theme.viewBackgroundColor : Kirigami.Theme.backgroundColor
+            }*/
 
-            Kirigami.Theme.colorSet: Kirigami.Theme.View
-            backgroundColor: Kirigami.Theme.backgroundColor
-
-            RowLayout {
-
+            contentItem: RowLayout {
                 spacing: Kirigami.Units.smallSpacing
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                }
+
+                QQC2.ToolButton {
+                    icon.name: {
+                        if (editMode.checked && hovered) {
+                            return model.enabled ? 'list-remove' : 'list-add-symbolic'
+                        }
+                        return model.iconName;
+                    }
+                    checkable: editMode.checked
+                    checked: editMode.checked && model.enabled
+                    onToggled: { model.enabled = checked; }
+
+                    QQC2.ToolTip.text: model.description
+                    QQC2.ToolTip.visible: down || hovered && (model.description != "")
+                }
+
+                QQC2.Label {
+                    text: model.name
+                    font.bold: model.enabled
+                    Layout.fillWidth: true
+                }
 
                 Loader {
                     id: valueEditor
                     focus: true
                     width: 12 * Kirigami.Units.gridUnit;
                     enabled: model.enabled && !editMode.checked //&& model.policy > 0
-                    //visible: model.enabled
+                    visible: !editMode.checked
 
                     property var modelValue: model.value
                     signal valueChanged(var value)
@@ -153,7 +193,6 @@ ColumnLayout {
                     }
 
                     onLoaded: {
-                        if (item.font) { item.font.bold = false; }
                         item.width = valueEditor.width;
                         item.anchors.right = valueEditor.right;
                         item.anchors.margins = 0;
@@ -262,7 +301,7 @@ ColumnLayout {
                                 from: 0
                                 to: 4098
                                 value: modelValue ? modelValue.split(",")[0] : 0
-                                onValueModified: valueEditor.valueChanged(value)
+                                onValueModified: valueEditor.valueChanged(coord_x.value + "," + coord_y.value)
                             }
                             QQC2.Label {
                                 text: i18nc("(x, y) coordinates separator in size/position"," x ")
@@ -274,7 +313,7 @@ ColumnLayout {
                                 to: 4098
                                 Layout.fillWidth: true
                                 value: modelValue ? modelValue.split(",")[1] : 0
-                                onValueModified: valueEditor.valueChanged(value)
+                                onValueModified: valueEditor.valueChanged(coord_x.value + "," + coord_y.value)
                             }
                         }
                     }
@@ -287,7 +326,8 @@ ColumnLayout {
                         }
                     }
                 }
-
+                /* Old attemps on controls for the delegate
+                 *
                 QQC2.ToolButton {
                     id: descriptionButton
                     icon.name: "documentinfo"
@@ -297,7 +337,7 @@ ColumnLayout {
 
                     visible: (model.description != "")
                     QQC2.ToolTip.text: model.description
-                    QQC2.ToolTip.visible: down || hovered
+                    QQC2.ToolTip.visible: down || hovered && (model.description != "")
                 }
 
                 QQC2.CheckBox {
@@ -306,7 +346,7 @@ ColumnLayout {
                     checked: model.enabled
                     onToggled: { model.enabled = checked; }
                 }
-                /*
+
                 QQC2.ToolButton {
                     icon.name: model.enabled? 'list-remove' : 'list-add-symbolic'
                     icon.color: model.enabled? 'red' : 'green'
@@ -315,6 +355,13 @@ ColumnLayout {
                     }
                 }
                 */
+            }
+
+            // FIXME: to reserve space behind the scrollbar.
+            // This will probably be solved in Kirigami's scrollbar
+            Item {
+                id: scrollBarPadder
+                width: 4 * Kirigami.Units.gridUnit
             }
         }
     }
