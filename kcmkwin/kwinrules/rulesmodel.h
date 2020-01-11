@@ -89,6 +89,7 @@ signals:
 
 private:
     void initRuleList();
+    void addRule(RuleItem *rule);
     int indexForKey(const QString &key) const;
 
 private:
