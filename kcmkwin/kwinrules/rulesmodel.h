@@ -36,7 +36,8 @@ class RulesModel : public QAbstractListModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString ruleName READ ruleName WRITE setRuleName NOTIFY ruleNameChanged)
+    Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
+    Q_PROPERTY(QString defaultDescription READ defaultDescription NOTIFY defaultDescriptionChanged)
     Q_PROPERTY(bool showWarning READ isWarningShown NOTIFY showWarningChanged)
 
 public:
@@ -66,8 +67,9 @@ public:
     RuleItem *ruleByKey(const QString &key) const;
     RuleItem *operator[](const QString &key) const;
 
-    const QString ruleName() const;
-    void setRuleName(const QString& name);
+    const QString description() const;
+    void setDescription(const QString& name);
+    const QString defaultDescription() const;
 
     void readFromConfig(KConfigGroup *config);
     void writeToConfig(KConfigGroup *config) const;
@@ -81,7 +83,8 @@ public slots:
     void init();
 
 signals:
-    void ruleNameChanged();
+    void descriptionChanged();
+    void defaultDescriptionChanged();
     void showWarningChanged();
 
 private:
@@ -90,7 +93,7 @@ private:
 
 private:
     QList<RuleItem *> m_ruleList;
-    QString m_ruleName;
+    QString m_description;
 };
 
 }

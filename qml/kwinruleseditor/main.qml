@@ -32,12 +32,13 @@ ColumnLayout {
         }
         QQC2.TextField {
             property bool isTextEdited: false
-            text: rulesModel.ruleName
+            text: rules.description
+            placeholderText: rules.defaultDescription
             onTextEdited: { isTextEdited = true; }
             onEditingFinished: {
                 if (isTextEdited) {
                     print ("Rule Name changed to: " + text)
-                    rulesModel.ruleName = text;
+                    rules.description = text;
                 }
                 isTextEdited = false;
             }
@@ -61,7 +62,7 @@ ColumnLayout {
 
             QQC2.ScrollBar.vertical: QQC2.ScrollBar { z: 100 }
 
-            model: rulesModel
+            model: rules
             delegate: ruleDelegate
 
             section.delegate: Kirigami.ListSectionHeader { label: section }
@@ -101,7 +102,7 @@ ColumnLayout {
                    "applications. If you really want to create a generic setting, it is " +
                    "recommended you at least limit the window types to avoid special window " +
                    "types.")
-        visible: rulesModel.showWarning
+        visible: rules.showWarning
         Layout.fillWidth: true
     }
 

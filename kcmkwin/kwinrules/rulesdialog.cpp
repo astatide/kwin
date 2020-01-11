@@ -46,7 +46,7 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
 
     QQuickView *quickView = new QQuickView();
     QQmlContext *qmlContext = quickView->rootContext();
-    qmlContext->setContextProperty("rulesModel", m_rulesModel);
+    qmlContext->setContextProperty("rules", m_rulesModel);
 
     quickView->setSource(QUrl::fromLocalFile(QStandardPaths::locate(
         QStandardPaths::GenericDataLocation,

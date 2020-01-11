@@ -124,9 +124,13 @@ bool RulesModel::setData(const QModelIndex & index, const QVariant & value, int 
 
     emit dataChanged(index, index, QVector<int>{role});
 
-    if (rule->key() == QLatin1String("wmclass")
-        || rule->key() == QLatin1String("types")) {
+    if (rule->key() == QLatin1String("wmclass")) {
         emit showWarningChanged();
+        emit defaultDescriptionChanged();
+    } else if (rule->key() == QLatin1String("types")) {
+        emit showWarningChanged();
+    } else if (rule->key() == QLatin1String("title")) {
+        emit defaultDescriptionChanged();
     }
 
     return true;
@@ -160,7 +164,7 @@ RuleItem* RulesModel::operator[](const QString& key) const
 
 void RulesModel::init()
 {
-    setRuleName(QString());
+    setDescription(QString());
 
     beginResetModel();
     for (RuleItem *rule : qAsConst(m_ruleList)) {
@@ -411,23 +415,39 @@ void RulesModel::initRuleList()
                                QStringLiteral("composite-track-on"));
 }
 
-const QString RulesModel::ruleName() const
+const QString RulesModel::description() const
 {
-    return m_ruleName;
+    return m_description;
 }
 
-void RulesModel::setRuleName(const QString& name)
+void RulesModel::setDescription(const QString& name)
 {
-    if (m_ruleName != name) {
-        m_ruleName = name;
-        emit ruleNameChanged();
+    if (m_description != name) {
+        m_description = name;
+        emit descriptionChanged();
     }
+}
+
+const QString RulesModel::defaultDescription() const
+{
+    const RuleItem *title_rule = ruleByKey(QLatin1String("title"));
+    const QString title = title_rule->isEnabled() ? title_rule->value().toString() : QString();
+    const QString wmclass = ruleByKey(QLatin1String("wmclass"))->value().toString();
+
+    if (!title.isEmpty()) {
+        return i18n("Window settings for %1", title);
+    }
+    if (!wmclass.isEmpty()) {
+        return i18n("Settings for %1", wmclass);
+    }
+
+    return i18n("New specific window settings");
 }
 
 bool RulesModel::isWarningShown()
 {
-    RuleItem *wmclass = ruleByKey(QLatin1String("wmclass"));
-    RuleItem *types = ruleByKey(QLatin1String("types"));
+    const RuleItem *wmclass = ruleByKey(QLatin1String("wmclass"));
+    const RuleItem *types = ruleByKey(QLatin1String("types"));
 
     const bool no_wmclass = !wmclass->isEnabled() || wmclass->policy() == Rules::UnimportantMatch;
     const bool alltypes = !types->isEnabled() || types->value() == 0 || types->value() == 0x3FF;
@@ -437,8 +457,8 @@ bool RulesModel::isWarningShown()
 
 void RulesModel::readFromConfig(KConfigGroup *config)
 {
-    const QString name = config->readEntry(QLatin1String("Description"));
-    setRuleName(name);
+    const QString desc = config->readEntry(QLatin1String("Description"));
+    setDescription(desc);
 
     beginResetModel();
     for (RuleItem *rule : qAsConst(m_ruleList)) {
@@ -459,12 +479,18 @@ void RulesModel::readFromConfig(KConfigGroup *config)
     }
     endResetModel();
 
+    emit descriptionChanged();
+    emit defaultDescriptionChanged();
     emit showWarningChanged();
 }
 
 void RulesModel::writeToConfig(KConfigGroup *config) const
 {
-    config->writeEntry(QLatin1String("Description"), ruleName());
+    if (!m_description.isEmpty()) {
+        config->writeEntry(QLatin1String("Description"), m_description);
+    } else {
+        config->writeEntry(QLatin1String("Description"), defaultDescription());
+    }
 
     for (const RuleItem *rule : qAsConst(m_ruleList)) {
         const bool ruleHasPolicy = rule->policyType() != RulePolicyType::NoPolicy;
