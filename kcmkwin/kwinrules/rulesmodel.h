@@ -64,7 +64,6 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex & index, const QVariant & value, int role) override;
 
-    RuleItem *ruleByKey(const QString &key) const;
     RuleItem *operator[](const QString &key) const;
 
     const QString description() const;
@@ -89,11 +88,11 @@ signals:
 
 private:
     void initRuleList();
-    void addRule(RuleItem *rule);
-    int indexForKey(const QString &key) const;
+    RuleItem *addRule(RuleItem *rule);
 
 private:
     QList<RuleItem *> m_ruleList;
+    QHash<QString, RuleItem *> m_rules;
     QString m_description;
 };
 

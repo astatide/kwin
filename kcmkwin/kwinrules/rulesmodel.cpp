@@ -67,7 +67,9 @@ QVariant RulesModel::data(const QModelIndex &index, int role) const
     if (!index.isValid() || index.column() != 0 || index.row() < 0 || index.row() >= int(m_ruleList.size())) {
         return QVariant();
     }
+
     const RuleItem *rule = m_ruleList.at(index.row());
+
     switch (role) {
     case KeyRole:
         return rule->key();
@@ -136,36 +138,17 @@ bool RulesModel::setData(const QModelIndex & index, const QVariant & value, int 
     return true;
 }
 
-void RulesModel::addRule(RuleItem* rule)
+RuleItem *RulesModel::addRule(RuleItem *rule)
 {
     m_ruleList << rule;
+    m_rules.insert(rule->key(), rule);
+
+    return rule;
 }
 
-
-int RulesModel::indexForKey(const QString& key) const
+RuleItem *RulesModel::operator[](const QString& key) const
 {
-    for (int i = 0; i < m_ruleList.count(); i++)
-    {
-        const RuleItem *rule = m_ruleList.at(i);
-        if (rule->key() == key) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-RuleItem* RulesModel::ruleByKey(const QString& key) const
-{
-    const int index = indexForKey(key);
-    if (index < 0 || index > m_ruleList.count()) {
-        return nullptr;
-    }
-    return m_ruleList.at(index);
-}
-
-RuleItem* RulesModel::operator[](const QString& key) const
-{
-    return ruleByKey(key);
+    return m_rules[key];
 }
 
 void RulesModel::init()
@@ -244,12 +227,12 @@ void RulesModel::initRuleList()
                          RulePolicyType::SetRule, RuleType::Option,
                          i18n("Virtual Desktop"), i18n("Size & Position"),
                          QStringLiteral("virtual-desktops")));
-
+#ifdef KWIN_BUILD_ACTIVITIES
     addRule(new RuleItem(QLatin1String("activity"),
                          RulePolicyType::SetRule, RuleType::Option,
                          i18n("Activity"), i18n("Size & Position"),
                          QStringLiteral("activities")));
-
+#endif
     addRule(new RuleItem(QLatin1String("screen"),
                          RulePolicyType::SetRule, RuleType::Integer,
                          i18n("Screen"), i18n("Size & Position"),
@@ -436,9 +419,8 @@ void RulesModel::setDescription(const QString& name)
 
 const QString RulesModel::defaultDescription() const
 {
-    const RuleItem *title_rule = ruleByKey(QLatin1String("title"));
-    const QString title = title_rule->isEnabled() ? title_rule->value().toString() : QString();
-    const QString wmclass = ruleByKey(QLatin1String("wmclass"))->value().toString();
+    const QString wmclass = m_rules["wmclass"]->value().toString();
+    const QString title = m_rules["title"]->isEnabled() ? m_rules["title"]->value().toString() : QString();
 
     if (!title.isEmpty()) {
         return i18n("Window settings for %1", title);
@@ -452,11 +434,11 @@ const QString RulesModel::defaultDescription() const
 
 bool RulesModel::isWarningShown()
 {
-    const RuleItem *wmclass = ruleByKey(QLatin1String("wmclass"));
-    const RuleItem *types = ruleByKey(QLatin1String("types"));
-
-    const bool no_wmclass = !wmclass->isEnabled() || wmclass->policy() == Rules::UnimportantMatch;
-    const bool alltypes = !types->isEnabled() || types->value() == 0 || types->value() == 0x3FF;
+    const bool no_wmclass = !m_rules["wmclass"]->isEnabled()
+                                || m_rules["wmclass"]->policy() == Rules::UnimportantMatch;
+    const bool alltypes = !m_rules["types"]->isEnabled()
+                              || m_rules["types"]->value() == 0
+                              || m_rules["types"]->value() == 0x3FF;
 
     return (no_wmclass && alltypes);
 }
