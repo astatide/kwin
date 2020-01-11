@@ -25,12 +25,6 @@
 
 using namespace KWin;
 
-
-RuleItem::RuleItem(RuleItemPrivate *d)
-    : d(d)
-{
-}
-
 RuleItem::RuleItem(const QString &key,
                    const RulePolicyType policyType,
                    const RuleType type,
@@ -38,15 +32,8 @@ RuleItem::RuleItem(const QString &key,
                    const QString &section,
                    const QString &iconName,
                    const QString &description)
+    : d(new RuleItemPrivate(key, name, section, iconName, description))
 {
-    d = new RuleItemPrivate();
-
-    d->m_key = key;
-    d->m_name = name;
-    d->m_section = section;
-    d->m_iconName = iconName;
-    d->m_description = description;
-
     d->m_policyType = policyType;
 
     d->m_type = type;

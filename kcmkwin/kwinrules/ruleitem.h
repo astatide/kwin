@@ -52,9 +52,6 @@ enum RulePolicyType {
 class RuleItem : public QObject
 {
 public:
-    RuleItem(RuleItemPrivate *d);
-    ~RuleItem();
-
     RuleItem(const QString &key,
              const RulePolicyType policyType,
              const RuleType type,
@@ -62,6 +59,7 @@ public:
              const QString &section,
              const QString &iconName=QStringLiteral("window"),
              const QString &description=QString());
+    ~RuleItem();
 
     QString key() const;
     QString name() const;
@@ -96,16 +94,34 @@ private:
 class RuleItemPrivate
 {
 public:
+    RuleItemPrivate();
+    RuleItemPrivate(const QString &key,
+                    const QString &name,
+                    const QString &section,
+                    const QString &iconName,
+                    const QString &description)
+        : m_key(key)
+        , m_name(name)
+        , m_section(section)
+        , m_iconName(iconName)
+        , m_description(description)
+        , m_enabled(false)
+        {};
+
+public:
     QString m_key;
     QString m_name;
     QString m_section;
     QString m_iconName;
     QString m_description;
-    bool m_enabled = false;
-    RuleType m_type;
-    QVariant m_value;
+
+    bool m_enabled;
+
     RulePolicyType m_policyType;
     int m_policyValue = 0;
+
+    RuleType m_type;
+    QVariant m_value;
 };
 
 }   //namespace
