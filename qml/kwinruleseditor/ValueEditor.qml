@@ -27,11 +27,14 @@ Loader {
     id: valueEditor
     focus: true
 
-    property var modelValue: model.value
-    signal valueChanged(var value)
+    property var modelValue
+    property int controlType
+
+    signal valueEdited(var value)
 
     sourceComponent: {
-        switch (model.type) {
+        //FIXME: Use enum from C++ model when exported
+        switch (controlType) {
             case 1: return booleanEditor          //RuleType.Boolean
             case 2: return stringEditor           //RuleType.String
             case 3: return integerEditor          //RuleType.Integer
@@ -40,31 +43,26 @@ Loader {
             case 6: return percentageEditor       //RuleType.Percentage
             case 7: return coordinateEditor       //RuleType.Coordinate
             case 8: return shortcutEditor         //RuleType.Shortcut
-            default: return notImplementedEditor
+            default: return emptyEditor
         }
-    }
-
-    onLoaded: {
-        item.width = valueEditor.width;
-        item.anchors.right = valueEditor.right;
-        item.anchors.margins = 0;
-        item.height = 1.6 * Kirigami.Units.gridUnit;
-        item.Layout.alignment = Qt.AlignVCenter + Qt.AlignRight;
     }
 
     Component {
-        id: notImplementedEditor
-        QQC2.Label {
-            text: "<i>To be implemented</i>"
-        }
+        id: emptyEditor
+        Item {}
     }
 
     Component {
         id: booleanEditor
-        QQC2.Switch {
-            text: checked ? i18n("Yes") : i18n("No")
-            checked: modelValue
-            onToggled: valueEditor.valueChanged(checked)
+        RowLayout {
+            Item {
+                Layout.fillWidth: true
+            }
+            QQC2.Switch {
+                text: checked ? i18n("Yes") : i18n("No")
+                checked: modelValue
+                onToggled: valueEditor.valueEdited(checked)
+            }
         }
     }
 
@@ -75,7 +73,7 @@ Loader {
             text: modelValue
             onTextEdited: { isTextEdited = true; }
             onEditingFinished: {
-                if (isTextEdited) { valueEditor.valueChanged(text); }
+                if (isTextEdited) { valueEditor.valueEdited(text); }
                 isTextEdited = false;
             }
         }
@@ -86,7 +84,7 @@ Loader {
         QQC2.SpinBox {
             editable: true
             value: modelValue
-            onValueModified: valueEditor.valueChanged(value)
+            onValueModified: valueEditor.valueEdited(value)
         }
     }
 
@@ -94,15 +92,18 @@ Loader {
         id: optionEditor
         QQC2.ComboBox {
             flat: true
-            onCurrentTextChanged: valueEditor.valueChanged(currentText)
+            onCurrentTextChanged: valueEditor.valueEdited(currentText)
         }
     }
 
     Component {
         id: flagsEditor
         RowLayout {
+            Layout.minimumWidth: 10 * Kirigami.Units.gridUnit
+            Layout.alignment: Qt.AlignRight;
             spacing: 0
             Repeater {
+                id: flagsRepeater
                 model: 10
                 QQC2.ToolButton {
                     property int bit: index
@@ -110,7 +111,7 @@ Loader {
                     checkable: true
                     checked: ((modelValue & (1 << bit)) >> bit) == 1
                     onToggled: {
-                        valueEditor.valueChanged((modelValue & ~(1 << bit)) | (checked << bit));
+                        valueEditor.valueEdited((modelValue & ~(1 << bit)) | (checked << bit));
                     }
                 }
             }
@@ -126,7 +127,7 @@ Loader {
                 from: 0
                 to: 100
                 value: modelValue
-                onMoved: valueEditor.valueChanged(Math.round(slider.value))
+                onMoved: valueEditor.valueEdited(Math.round(slider.value))
             }
             QQC2.Label {
                 text: i18n("%1 %", Math.round(slider.value))
@@ -147,7 +148,7 @@ Loader {
                 from: 0
                 to: 4098
                 value: coords[0]
-                onValueModified: valueEditor.valueChanged(coord_x.value + "," + coord_y.value)
+                onValueModified: valueEditor.valueEdited(coord_x.value + "," + coord_y.value)
             }
             QQC2.Label {
                 text: i18nc("(x, y) coordinates separator in size/position"," x ")
@@ -159,7 +160,7 @@ Loader {
                 to: 4098
                 Layout.fillWidth: true
                 value: coords[1]
-                onValueModified: valueEditor.valueChanged(coord_x.value + "," + coord_y.value)
+                onValueModified: valueEditor.valueEdited(coord_x.value + "," + coord_y.value)
             }
         }
     }

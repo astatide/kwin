@@ -66,14 +66,6 @@ QQC2.ItemDelegate {
 
         QQC2.ToolButton {
             icon.name: model.iconName
-/*          icon.name: {
-                if (editMode && hovered) {
-                    return model.enabled ? 'list-remove' : 'list-add-symbolic'
-                }
-                return model.iconName;
-            }
-            checkable: editMode
-*/
             QQC2.ToolTip.text: model.description
             QQC2.ToolTip.visible: (down || hovered) && (model.description != "")
         }
@@ -84,12 +76,21 @@ QQC2.ItemDelegate {
             Layout.fillWidth: true
         }
 
+        Item {
+            Layout.fillWidth: true
+        }
+
         ValueEditor {
-            width: 12 * Kirigami.Units.gridUnit;
+            id: valueEditor
+            Layout.preferredWidth: 12 * Kirigami.Units.gridUnit
+            Layout.alignment: Qt.AlignRight
             enabled: model.enabled //&& !editMode //&& model.policy > 0
             //visible: !editMode
 
-            onValueChanged: {
+            modelValue: model.value
+            controlType: model.type
+
+            onValueEdited: (value) => {
                 print ("Rule changed: " + model.key + " = " + value)
                 model.value = value
             }

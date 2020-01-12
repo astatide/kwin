@@ -30,6 +30,7 @@ ColumnLayout {
             text: i18n("Rule description:")
             level: 3
         }
+
         QQC2.TextField {
             property bool isTextEdited: false
             text: rules.description
@@ -51,26 +52,22 @@ ColumnLayout {
         Layout.fillHeight: true
         Layout.margins: 0
 
-        ListView {
-            id: enabledRulesView
-
+        QQC2.ScrollView {
             anchors.fill: parent
             anchors.margins: 0
-            boundsBehavior: Flickable.StopAtBounds
-            clip: true
-            focus: true
 
-            QQC2.ScrollBar.vertical: QQC2.ScrollBar { z: 100 }
-
-            model: rules
-            delegate: RuleDelegate {
-                editMode: editModeButton.checked
+            ListView {
+                id: enabledRulesView
+                model: rules
+                delegate: RuleDelegate {
+                    editMode: editModeButton.checked
+                }
+                section {
+                    delegate: Kirigami.ListSectionHeader { label: section }
+                    property: "section"
+                }
             }
-
-            section.delegate: Kirigami.ListSectionHeader { label: section }
-            section.property: "section"
         }
-
     }
 
     RowLayout {
