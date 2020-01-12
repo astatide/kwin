@@ -54,7 +54,7 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     quickView->setResizeMode(QQuickView::SizeRootObjectToView);
 
     quickWidget = QWidget::createWindowContainer(quickView, this);
-    quickWidget->setMinimumSize(QSize(500, 540));
+    quickWidget->setMinimumSize(QSize(600, 640));
     quickWidget->setVisible(isQuickUIShown);
     layout()->addWidget(quickWidget);
 
