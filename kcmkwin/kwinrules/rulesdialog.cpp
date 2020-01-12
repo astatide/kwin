@@ -100,7 +100,13 @@ void RulesDialog::toggleUI(bool showQuickUI)
 // DEBUG: Helper action button
 void RulesDialog::testButtonClicked()
 {
+    QVariantMap info {
+        {"x", 100 }, {"y", 200 },
+        {"width", 300 }, {"height", 400 },
+        {"type", 27}
+    };
 
+    m_rulesModel->prefillProperties(info);
 }
 
 // window is set only for Alt+F3/Window-specific settings, because the dialog
