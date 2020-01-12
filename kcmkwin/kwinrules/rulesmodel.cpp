@@ -22,6 +22,7 @@
 #include "rulesmodel.h"
 #include <rules.h>
 
+#include <QDebug>
 #include <QIcon>
 #include <QTemporaryFile>
 
@@ -33,6 +34,7 @@ RulesModel::RulesModel(QObject *parent)
     : QAbstractListModel(parent)
 {
     initRuleList();
+    initPropertyMap();
 }
 
 QHash< int, QByteArray > RulesModel::roleNames() const
@@ -404,6 +406,28 @@ void RulesModel::initRuleList()
                          QStringLiteral("composite-track-on")));
 }
 
+void RulesModel::initPropertyMap()
+{
+    m_ruleForProperty.clear();
+
+    // Map window properties to rule keys
+    m_ruleForProperty.insert(QStringLiteral("x11DesktopNumber"), QStringLiteral("desktop"));
+    m_ruleForProperty.insert(QStringLiteral("maximizeHorizontal"), QStringLiteral("maximizehoriz"));
+    m_ruleForProperty.insert(QStringLiteral("maximizeVertical"), QStringLiteral("maximizevert"));
+    m_ruleForProperty.insert(QStringLiteral("minimized"), QStringLiteral("minimize"));
+    m_ruleForProperty.insert(QStringLiteral("shaded"), QStringLiteral("shade"));
+    m_ruleForProperty.insert(QStringLiteral("fullscreen"), QStringLiteral("fullscreen"));
+    m_ruleForProperty.insert(QStringLiteral("keepAbove"), QStringLiteral("above"));
+    m_ruleForProperty.insert(QStringLiteral("keepBelow"), QStringLiteral("below"));
+    m_ruleForProperty.insert(QStringLiteral("noBorder"), QStringLiteral("noborder"));
+    m_ruleForProperty.insert(QStringLiteral("skipTaskbar"), QStringLiteral("skiptaskbar"));
+    m_ruleForProperty.insert(QStringLiteral("skipPager"), QStringLiteral("skippager"));
+    m_ruleForProperty.insert(QStringLiteral("skipSwitcher"), QStringLiteral("skipswitcher"));
+    m_ruleForProperty.insert(QStringLiteral("type"), QStringLiteral("type"));
+    m_ruleForProperty.insert(QStringLiteral("desktopFile"), QStringLiteral("desktopfile"));
+}
+
+
 const QString RulesModel::description() const
 {
     return m_description;
@@ -483,6 +507,8 @@ void RulesModel::writeToConfig(KConfigGroup *config) const
     for (const RuleItem *rule : qAsConst(m_ruleList)) {
         const bool ruleHasPolicy = rule->policyType() != RulePolicyType::NoPolicy;
 
+        //TODO: Add condition `&& rule->policy() > 0` to match the classic RuleWidget behavior
+        //      after implementing policy management in the UI
         if (rule->isEnabled()) {
             config->writeEntry(rule->key(), rule->value(), KConfig::Persistent);
             if (ruleHasPolicy) {
@@ -495,6 +521,43 @@ void RulesModel::writeToConfig(KConfigGroup *config) const
             }
         }
     }
+}
+
+void RulesModel::prefillProperties(const QVariantMap &info)
+{
+    beginResetModel();
+
+    const QString position = QStringLiteral("%1,%2").arg(info.value("x").toInt())
+                                                    .arg(info.value("y").toInt());
+    const QString size = QStringLiteral("%1,%2").arg(info.value("width").toInt())
+                                                .arg(info.value("height").toInt());
+
+    if (!m_rules["position"]->isEnabled()) {
+        m_rules["position"]->setValue(position);
+    }
+    if (!m_rules["size"]->isEnabled()) {
+        m_rules["size"]->setValue(size);
+    }
+    if (!m_rules["minsize"]->isEnabled()) {
+        m_rules["minsize"]->setValue(size);
+    }
+    if (!m_rules["maxsize"]->isEnabled()) {
+        m_rules["maxsize"]->setValue(size);
+    }
+
+    for (QString &property : info.keys()) {
+        const QString ruleKey = m_ruleForProperty.value(property, QString());
+        if (ruleKey.isEmpty() || m_rules[ruleKey]->isEnabled()) {
+            continue;
+        }
+
+        const QVariant value = info.value(property);
+        m_rules[ruleKey]->setValue(value);
+    }
+
+    endResetModel();
+
+    emit showWarningChanged();
 }
 
 void RulesModel::importFromRules(Rules* rules)

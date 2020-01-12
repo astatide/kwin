@@ -72,6 +72,7 @@ public:
 
     void readFromConfig(KConfigGroup *config);
     void writeToConfig(KConfigGroup *config) const;
+    void prefillProperties(const QVariantMap &info);
 
     void importFromRules(Rules *rules);
     Rules *exportToRules() const;
@@ -88,12 +89,14 @@ signals:
 
 private:
     void initRuleList();
+    void initPropertyMap();
     RuleItem *addRule(RuleItem *rule);
 
 private:
     QList<RuleItem *> m_ruleList;
     QHash<QString, RuleItem *> m_rules;
     QString m_description;
+    QHash<QString, QString> m_ruleForProperty;
 };
 
 }
