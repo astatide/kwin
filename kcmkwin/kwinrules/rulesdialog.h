@@ -45,6 +45,7 @@ protected:
 private Q_SLOTS:
     void displayHints();
     void toggleUI(bool showQuickUI);
+    void testButtonClicked();
 private:
     bool isQuickUIShown = true;
     RulesModel* m_rulesModel;
