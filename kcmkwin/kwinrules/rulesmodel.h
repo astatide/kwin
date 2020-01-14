@@ -51,7 +51,7 @@ public:
         EnabledRole,
         ValueRole,
         TypeRole,
-        PolicyRole,
+        PolicyIdRole,
         PolicyModelRole,
         OptionsModelRole
     };

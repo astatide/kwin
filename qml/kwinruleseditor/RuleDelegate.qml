@@ -76,8 +76,20 @@ QQC2.ItemDelegate {
             Layout.fillWidth: true
         }
 
-        Item {
-            Layout.fillWidth: true
+        QQC2.ComboBox {
+            id: policyCombo
+            Layout.preferredWidth: 8 * Kirigami.Units.gridUnit
+            flat: true
+
+            visible: count > 0
+            enabled: valueEditor.enabled
+
+            model: policyModel
+            currentIndex: policy
+            onActivated: {
+                print ("Policy changed for: " + key + " policyId: " + index);
+                policy = index;
+            }
         }
 
         ValueEditor {

@@ -41,7 +41,7 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     setWindowIcon(QIcon::fromTheme("preferences-system-windows-actions"));
     setLayout(new QVBoxLayout);
 
-    //Init model and QML QuickView
+    // Init model and QML QuickView
     m_rulesModel = new RulesModel(this);
 
     QQuickView *quickView = new QQuickView();
@@ -54,10 +54,11 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     quickView->setResizeMode(QQuickView::SizeRootObjectToView);
 
     quickWidget = QWidget::createWindowContainer(quickView, this);
-    quickWidget->setMinimumSize(QSize(600, 640));
+    quickWidget->setMinimumSize(QSize(640, 700));
     quickWidget->setVisible(isQuickUIShown);
     layout()->addWidget(quickWidget);
 
+    // Classic widget initialization
     widget = new RulesWidget(this);
     widget->setVisible(!isQuickUIShown);
     layout()->addWidget(widget);

@@ -21,39 +21,19 @@
 #ifndef KWIN_RULEITEM_H
 #define KWIN_RULEITEM_H
 
+#include "ruleitem_p.h"
+
 #include <QIcon>
-#include <QObject>
-#include <QVariant>
+
 
 namespace KWin
 {
-
-class RuleItemPrivate;
-
-enum RuleType {
-    Undefined,
-    Boolean,
-    String,
-    Integer,
-    Option,
-    Flags,
-    Percentage,
-    Coordinate,
-    Shortcut
-};
-
-enum RulePolicyType {
-    NoPolicy,
-    StringMatch,
-    SetRule,
-    ForceRule
-};
 
 class RuleItem : public QObject
 {
 public:
     RuleItem(const QString &key,
-             const RulePolicyType policyType,
+             const RulePolicy::Type policyType,
              const RuleType type,
              const QString &name,
              const QString &section,
@@ -73,55 +53,25 @@ public:
     RuleType type() const;
     QVariant value() const;
 
-    RulePolicyType policyType() const;
-    int policy() const;
+    RulePolicy::Type policyType() const;
+    int policy() const;          // int belongs to anonymous enum in Rules::
+    int policyIndex() const;
     QStringList policyModel() const;
     QString policyKey() const;
 
     void setEnabled(bool enabled);
     void setValue(QVariant value);
-    void setPolicy(int policy);
-    void reset();
+    void setPolicy(int policy);  // int belongs to anonymous enum in Rules::
+    void setPolicyIndex(int policyIndex);
 
-protected:
-    RuleItemPrivate *d;
+    void reset();
 
 private:
     static QVariant typedValue(const QVariant &value, const RuleType type);
-    static QVector<int> policyOptions(RulePolicyType policyType);
-};
 
-class RuleItemPrivate
-{
-public:
-    RuleItemPrivate();
-    RuleItemPrivate(const QString &key,
-                    const QString &name,
-                    const QString &section,
-                    const QString &iconName,
-                    const QString &description)
-        : m_key(key)
-        , m_name(name)
-        , m_section(section)
-        , m_iconName(iconName)
-        , m_description(description)
-        , m_enabled(false)
-        {};
-
-public:
-    QString m_key;
-    QString m_name;
-    QString m_section;
-    QString m_iconName;
-    QString m_description;
-
-    bool m_enabled;
-
-    RulePolicyType m_policyType;
-    int m_policyValue = 0;
-
-    RuleType m_type;
-    QVariant m_value;
+private:
+    RuleItemPrivate *d;
+    RulePolicy *p;
 };
 
 }   //namespace

@@ -23,19 +23,20 @@
 
 #include <KLocalizedString>
 
+
 using namespace KWin;
 
+
 RuleItem::RuleItem(const QString &key,
-                   const RulePolicyType policyType,
+                   const RulePolicy::Type policyType,
                    const RuleType type,
                    const QString &name,
                    const QString &section,
                    const QString &iconName,
                    const QString &description)
     : d(new RuleItemPrivate(key, name, section, iconName, description))
+    , p(new RulePolicy(policyType))
 {
-    d->m_policyType = policyType;
-
     d->m_type = type;
     setValue(QVariant());
 }
@@ -43,12 +44,13 @@ RuleItem::RuleItem(const QString &key,
 RuleItem::~RuleItem()
 {
     delete d;
+    delete p;
 }
 
 void RuleItem::reset()
 {
     setValue(QVariant());
-    setPolicy(0);
+    setPolicy(Rules::Unused);
     setEnabled(false);
 }
 
@@ -109,68 +111,37 @@ void RuleItem::setValue(QVariant value)
 
 int RuleItem::policy() const
 {
-    if (d->m_policyType == RulePolicyType::NoPolicy) {
-        return Rules::Apply;
-    }
-    return d->m_policyValue;
+    return p->value();
 }
 
 void RuleItem::setPolicy(int policy)
 {
-    d->m_policyValue = policy;
+    p->setValue(policy);
 }
 
-RulePolicyType RuleItem::policyType() const
+int RuleItem::policyIndex() const
 {
-    return d->m_policyType;
+    return p->index();
+}
+
+void RuleItem::setPolicyIndex(int policyIndex)
+{
+    p->setIndex(policyIndex);
+}
+
+RulePolicy::Type RuleItem::policyType() const
+{
+    return p->type();
 }
 
 QStringList RuleItem::policyModel() const
 {
-    QStringList policyList;
-/*
-    const auto intOptions = policyOptions(d->m_policyType);
-    for (const int option : intOptions)
-    {
-        if (d->m_policyType == RulePolicyType::StringMatch) {
-            switch (option):
-                case Rules::UnimportantMatch:
-                    policyList << i18n("");
-                case     Rules::ExactMatch,
-                    return i18n("");
-                case     Rules::SubstringMatch,
-                    return i18n("");
-                case     Rules::RegExpMatch,
-                    return i18n("");
-                };
-            case SetRule:
-            case ForceRule:
-                return QVector<int> {
-                    Rules::DontAffect,
-                    Rules::Apply,
-                    Rules::Remember,
-                    Rules::Force,
-                    Rules::ApplyNow,
-                    Rules::ForceTemporarily
-                };
-    }
-    */
-    return QStringList();
+    return p->descriptionList();
 }
 
 QString RuleItem::policyKey() const
 {
-    switch (d->m_policyType) {
-        case NoPolicy:
-            return QString();
-        case StringMatch:
-            return QStringLiteral("%1match").arg(d->m_key);
-        case SetRule:
-        case ForceRule:
-            return QStringLiteral("%1rule").arg(d->m_key);
-    }
-
-    return QString();
+    return p->policyKey(d->m_key);
 }
 
 QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
@@ -199,71 +170,91 @@ QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
     return value;
 }
 
-QVector<int> RuleItem::policyOptions(RulePolicyType policyType)
-{
-    switch (policyType) {
-    case NoPolicy:
-        return QVector<int> {};
-    case StringMatch:
-        return QVector<int> {
-            Rules::UnimportantMatch,
-            Rules::ExactMatch,
-            Rules::SubstringMatch,
-            Rules::RegExpMatch,
-        };
-    case SetRule:
-        return QVector<int> {
-            Rules::DontAffect,
-            Rules::Apply,
-            Rules::Remember,
-            Rules::Force,
-            Rules::ApplyNow,
-            Rules::ForceTemporarily
-        };
-    case ForceRule:
-        return QVector<int> {
-            Rules::DontAffect,
-            Rules::Force,
-            Rules::ForceTemporarily
-        };
-    }
 
-    return QVector<int> {};
+RulePolicy::Type RulePolicy::type() const
+{
+    return m_type;
 }
 
-/*
-static const int set_rule_to_combo[] = {
-    0, // Unused
-    0, // Don't Affect
-    3, // Force
-    1, // Apply
-    2, // Remember
-    4, // ApplyNow
-    5  // ForceTemporarily
-};
+int RulePolicy::index() const
+{
+    return m_index;
+}
 
-static const Rules::SetRule combo_to_set_rule[] = {
-    (Rules::SetRule)Rules::DontAffect,
-    (Rules::SetRule)Rules::Apply,
-    (Rules::SetRule)Rules::Remember,
-    (Rules::SetRule)Rules::Force,
-    (Rules::SetRule)Rules::ApplyNow,
-    (Rules::SetRule)Rules::ForceTemporarily
-};
+void RulePolicy::setIndex(int index)
+{
+    Q_ASSERT (index >= 0 && index < m_data.count());
+    m_index = index;
+}
 
-static const int force_rule_to_combo[] = {
-    0, // Unused
-    0, // Don't Affect
-    1, // Force
-    0, // Apply
-    0, // Remember
-    0, // ApplyNow
-    2  // ForceTemporarily
-};
+int RulePolicy::value() const
+{
+    if (m_type == RulePolicy::NoPolicy) {
+        return Rules::Apply;   // To simplify external checks (!=0) when rule has no policy
+    }
+    return m_data.at(m_index).value;
+}
 
-static const Rules::ForceRule combo_to_force_rule[] = {
-    (Rules::ForceRule)Rules::DontAffect,
-    (Rules::ForceRule)Rules::Force,
-    (Rules::ForceRule)Rules::ForceTemporarily
-};
-*/
+void RulePolicy::setValue(int value)
+{
+    for (int index = 0; index < m_data.count(); index++) {
+        if (m_data.at(index).value == value) {
+            m_index = index;
+        }
+    }
+}
+
+QStringList RulePolicy::descriptionList() const
+{
+    QStringList descList;
+    for (const Data &item : m_data) {
+        descList << item.text;
+    }
+    return descList;
+}
+
+QString RulePolicy::policyKey(const QString &key) const
+{
+    switch (m_type) {
+        case NoPolicy:
+            return QString();
+        case StringMatch:
+            return QStringLiteral("%1match").arg(key);
+        case SetRule:
+        case ForceRule:
+            return QStringLiteral("%1rule").arg(key);
+    }
+
+    return QString();
+}
+
+QList<RulePolicy::Data> RulePolicy::policyOptions(RulePolicy::Type type)
+{
+    switch (type) {
+    case NoPolicy:
+        return {};
+    case StringMatch:
+        return {
+            {Rules::UnimportantMatch, i18n("Unimportant")},
+            {Rules::ExactMatch,       i18n("Exact Match")},
+            {Rules::SubstringMatch,   i18n("Substring Match")},
+            {Rules::RegExpMatch,      i18n("Regular Expresion")}
+        };
+    case SetRule:
+        return {
+            {Rules::DontAffect,       i18n("Do Not Affect")},
+            {Rules::Apply,            i18n("Apply Initially")},
+            {Rules::Remember,         i18n("Remember")},
+            {Rules::Force,            i18n("Force")},
+            {Rules::ApplyNow,         i18n("Apply Now")},
+            {Rules::ForceTemporarily, i18n("Force Temporarily")},
+        };
+    case ForceRule:
+        return {
+            {Rules::DontAffect,       i18n("Do Not Affect")},
+            {Rules::Force,            i18n("Force")},
+            {Rules::ForceTemporarily, i18n("Force Temporarily")},
+        };
+    }
+    return {};
+}
