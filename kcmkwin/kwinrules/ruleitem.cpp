@@ -51,7 +51,7 @@ void RuleItem::reset()
 {
     setValue(QVariant());
     setPolicy(Rules::Unused);
-    setEnabled(false);
+    setEnabled(hasFlag(AlwaysEnabled) | hasFlag(StartEnabled));
 }
 
 QString RuleItem::key() const
@@ -91,7 +91,21 @@ bool RuleItem::isEnabled() const
 
 void RuleItem::setEnabled(bool enabled)
 {
-    d->m_enabled = enabled;
+    d->m_enabled = enabled | hasFlag(AlwaysEnabled);
+}
+
+bool RuleItem::hasFlag(uint flag) const
+{
+    return (d->m_flags & flag) == flag;
+}
+
+void RuleItem::setFlags(uint flags, bool active)
+{
+    if (active) {
+        d->m_flags |= flags;
+    } else {
+        d->m_flags &= (AllFlags ^ flags);
+    }
 }
 
 RuleType RuleItem::type() const
@@ -157,7 +171,7 @@ QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
             return value.toInt();
         case Option:
             return value.toString();
-        case Flags:
+        case FlagsOption:
             return value.toUInt();
         case Percentage:
             return value.toUInt();

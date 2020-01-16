@@ -39,7 +39,7 @@ Loader {
             case 2: return stringEditor           //RuleType.String
             case 3: return integerEditor          //RuleType.Integer
             case 4: return optionEditor           //RuleType.Option
-            case 5: return flagsEditor            //RuleType.Flags
+            case 5: return flagsEditor            //RuleType.FlagsOption
             case 6: return percentageEditor       //RuleType.Percentage
             case 7: return coordinateEditor       //RuleType.Coordinate
             case 8: return shortcutEditor         //RuleType.Shortcut

@@ -31,12 +31,11 @@ enum RuleType {
     String,
     Integer,
     Option,
-    Flags,
+    FlagsOption,
     Percentage,
     Coordinate,
     Shortcut
 };
-
 
 class RuleItemPrivate
 {
@@ -53,6 +52,7 @@ public:
         , m_iconName(iconName)
         , m_description(description)
         , m_enabled(false)
+        , m_flags(0)
         {};
 
 public:
@@ -63,6 +63,7 @@ public:
     QString m_description;
 
     bool m_enabled;
+    uint m_flags;
 
     RuleType m_type;
     QVariant m_value;

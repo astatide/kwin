@@ -60,6 +60,7 @@ QQC2.ItemDelegate {
 
         QQC2.CheckBox {
             visible: editMode
+            opacity: model.selectable ? 1 : 0
             checked: model.enabled
             onToggled: { model.enabled = checked; }
         }

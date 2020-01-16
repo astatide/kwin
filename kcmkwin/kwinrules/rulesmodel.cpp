@@ -47,6 +47,7 @@ QHash< int, QByteArray > RulesModel::roleNames() const
         {SectionRole,       QByteArrayLiteral("section")},
         {DescriptionRole,   QByteArrayLiteral("description")},
         {EnabledRole,       QByteArrayLiteral("enabled")},
+        {SelectableRole,    QByteArrayLiteral("selectable")},
         {ValueRole,         QByteArrayLiteral("value")},
         {TypeRole,          QByteArrayLiteral("type")},
         {PolicyIdRole,      QByteArrayLiteral("policy")},
@@ -87,6 +88,8 @@ QVariant RulesModel::data(const QModelIndex &index, int role) const
         return rule->section();
     case EnabledRole:
         return rule->isEnabled();
+    case SelectableRole:
+        return !rule->hasFlag(RuleItem::AlwaysEnabled);
     case ValueRole:
         return rule->value();
     case TypeRole:
@@ -109,11 +112,6 @@ bool RulesModel::setData(const QModelIndex & index, const QVariant & value, int 
 
     switch (role) {
     case EnabledRole:
-        // from <rules.cpp>: 'wmclass' and 'wmclasscomplete' are always enabled
-        if (rule->key().startsWith(QLatin1String("wmclass"))) {
-            rule->setEnabled(true);
-            break;
-        }
         rule->setEnabled(value.toBool());
         break;
     case ValueRole:
@@ -128,12 +126,10 @@ bool RulesModel::setData(const QModelIndex & index, const QVariant & value, int 
 
     emit dataChanged(index, index, QVector<int>{role});
 
-    if (rule->key() == QLatin1String("wmclass")) {
+    if (rule->hasFlag(RuleItem::AffectsWarning)) {
         emit showWarningChanged();
-        emit defaultDescriptionChanged();
-    } else if (rule->key() == QLatin1String("types")) {
-        emit showWarningChanged();
-    } else if (rule->key() == QLatin1String("title")) {
+    }
+    if (rule->hasFlag(RuleItem::AffectsDescription)) {
         emit defaultDescriptionChanged();
     }
 
@@ -160,12 +156,6 @@ void RulesModel::init()
     beginResetModel();
     for (RuleItem *rule : qAsConst(m_ruleList)) {
         rule->reset();
-
-        if (rule->key() == QLatin1String("wmclass")
-                || rule->key() == QLatin1String("wmclasscomplete")
-                || rule->key() == QLatin1String("types")) {
-            rule->setEnabled(true);
-        }
     }
     endResetModel();
 }
@@ -179,11 +169,13 @@ void RulesModel::initRuleList()
                          RulePolicy::StringMatch, RuleType::String,
                          i18n("Window class (application)"), i18n("Window matching"),
                          QStringLiteral("window")));
+    m_rules["wmclass"]->setFlags(RuleItem::AlwaysEnabled | RuleItem::AffectsWarning | RuleItem::AffectsDescription);
 
     addRule(new RuleItem(QLatin1String("wmclasscomplete"),
                          RulePolicy::NoPolicy, RuleType::Boolean,
                          i18n("Match whole window class"), i18n("Window matching"),
                          QStringLiteral("window")));
+    m_rules["wmclasscomplete"]->setFlags(RuleItem::AlwaysEnabled);
 
     addRule(new RuleItem(QLatin1String("windowrole"),
                          RulePolicy::NoPolicy, RuleType::String,
@@ -191,14 +183,16 @@ void RulesModel::initRuleList()
                          QStringLiteral("dialog-object-properties")));
 
     addRule(new RuleItem(QLatin1String("types"),
-                         RulePolicy::NoPolicy, RuleType::Flags,
+                         RulePolicy::NoPolicy, RuleType::FlagsOption,
                          i18n("Window types"), i18n("Window matching"),
                          QStringLiteral("window-duplicate")));
+    m_rules["types"]->setFlags(RuleItem::StartEnabled | RuleItem::AffectsWarning );
 
     addRule(new RuleItem(QLatin1String("title"),
                          RulePolicy::StringMatch, RuleType::String,
                          i18n("Window title"), i18n("Window matching"),
                          QStringLiteral("edit-comment")));
+    m_rules["title"]->setFlags(RuleItem::AffectsDescription);
 
     addRule(new RuleItem(QLatin1String("clientmachine"), RulePolicy::StringMatch, RuleType::String,
                          i18n("Machine (hostname)"), i18n("Window matching"),
@@ -404,6 +398,8 @@ void RulesModel::initRuleList()
                          RulePolicy::ForceRule, RuleType::Boolean,
                          i18n("Block compositing"), i18n("Appearance & Fixes"),
                          QStringLiteral("composite-track-on")));
+
+    init();
 }
 
 void RulesModel::initPropertyMap()

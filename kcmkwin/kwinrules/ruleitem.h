@@ -32,6 +32,16 @@ namespace KWin
 class RuleItem : public QObject
 {
 public:
+    enum Flags {
+        NoFlags            = 0,
+        AlwaysEnabled      = 1u << 0,
+        StartEnabled       = 1u << 1,
+        AffectsWarning     = 1u << 2,
+        AffectsDescription = 1u << 3,
+        AllFlags           = 0b1111
+    };
+
+public:
     RuleItem(const QString &key,
              const RulePolicy::Type policyType,
              const RuleType type,
@@ -49,6 +59,9 @@ public:
     QString description() const;
 
     bool isEnabled() const;
+
+    bool hasFlag(uint flag) const;
+    void setFlags(uint flags, bool active=true);
 
     RuleType type() const;
     QVariant value() const;

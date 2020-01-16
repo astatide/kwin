@@ -49,6 +49,7 @@ public:
         KeyRole,
         SectionRole,
         EnabledRole,
+        SelectableRole,
         ValueRole,
         TypeRole,
         PolicyIdRole,
