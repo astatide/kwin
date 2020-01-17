@@ -70,7 +70,35 @@ public:
 };
 
 
-class RulePolicy
+class OptionsModel
+{
+public:
+    struct Data {
+        QVariant value;
+        QString text;
+//        QString iconName;
+//        QString description;
+    };
+
+public:
+    OptionsModel() : m_data(), m_index(0) {};
+    OptionsModel(QList<Data> data) : m_data(data), m_index(0) {};
+
+    QStringList descriptionList() const;
+
+    QVariant value() const;
+    void setValue(QVariant value);
+
+    int index() const;
+    void setIndex(int index);
+
+protected:
+    QList<Data> m_data;
+    int m_index = 0;
+};
+
+
+class RulePolicy : public OptionsModel
 {
 public:
     enum Type {
@@ -80,37 +108,21 @@ public:
         ForceRule
     };
 
-private:
-    struct Data {
-        int value;
-        QString text;
-    };
-
 public:
     RulePolicy(Type type)
-        : m_type(type)
-        , m_data(policyOptions(type))
-        , m_index(0)
+        : OptionsModel(policyOptions(type))
+        , m_type(type)
         {};
 
     Type type() const;
-    QString policyKey(const QString &key) const;
-
-    QStringList descriptionList() const;
-
     int value() const;
-    void setValue(int value);
-
-    int index() const;
-    void setIndex(int index);
+    QString policyKey(const QString &key) const;
 
 private:
     static QList<Data> policyOptions(RulePolicy::Type type);
 
 private:
     Type m_type;
-    QList<Data> m_data;
-    int m_index = 0;
 };
 
 }   //namespace

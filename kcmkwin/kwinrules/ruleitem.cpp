@@ -188,31 +188,23 @@ QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
 }
 
 
-RulePolicy::Type RulePolicy::type() const
-{
-    return m_type;
-}
-
-int RulePolicy::index() const
+int OptionsModel::index() const
 {
     return m_index;
 }
 
-void RulePolicy::setIndex(int index)
+void OptionsModel::setIndex(int index)
 {
     Q_ASSERT (index >= 0 && index < m_data.count());
     m_index = index;
 }
 
-int RulePolicy::value() const
+QVariant OptionsModel::value() const
 {
-    if (m_type == RulePolicy::NoPolicy) {
-        return Rules::Apply;   // To simplify external checks (!=0) when rule has no policy
-    }
     return m_data.at(m_index).value;
 }
 
-void RulePolicy::setValue(int value)
+void OptionsModel::setValue(QVariant value)
 {
     for (int index = 0; index < m_data.count(); index++) {
         if (m_data.at(index).value == value) {
@@ -221,13 +213,27 @@ void RulePolicy::setValue(int value)
     }
 }
 
-QStringList RulePolicy::descriptionList() const
+QStringList OptionsModel::descriptionList() const
 {
     QStringList descList;
     for (const Data &item : m_data) {
         descList << item.text;
     }
     return descList;
+}
+
+
+RulePolicy::Type RulePolicy::type() const
+{
+    return m_type;
+}
+
+int RulePolicy::value() const
+{
+    if (m_type == RulePolicy::NoPolicy) {
+        return Rules::Apply;   // To simplify external checks (!=0) when rule has no policy
+    }
+    return OptionsModel::value().toInt();
 }
 
 QString RulePolicy::policyKey(const QString &key) const
