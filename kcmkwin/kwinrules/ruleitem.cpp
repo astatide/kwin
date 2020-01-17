@@ -176,6 +176,9 @@ QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
         case Percentage:
             return value.toUInt();
         case Coordinate:
+            if (value.toString().isEmpty()) {
+                return QStringLiteral("0,0");
+            }
             return value.toString();
         case Shortcut:
             return value.toString();
