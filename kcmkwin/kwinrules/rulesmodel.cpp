@@ -149,6 +149,48 @@ RuleItem *RulesModel::operator[](const QString& key) const
     return m_rules[key];
 }
 
+
+const QString RulesModel::description() const
+{
+    return m_description;
+}
+
+void RulesModel::setDescription(const QString& name)
+{
+    if (m_description != name) {
+        m_description = name;
+        emit descriptionChanged();
+    }
+}
+
+const QString RulesModel::defaultDescription() const
+{
+    const QString wmclass = m_rules["wmclass"]->value().toString();
+    const QString title = m_rules["title"]->isEnabled() ? m_rules["title"]->value().toString() : QString();
+
+    if (!title.isEmpty()) {
+        return i18n("Window settings for %1", title);
+    }
+    if (!wmclass.isEmpty()) {
+        return i18n("Settings for %1", wmclass);
+    }
+
+    return i18n("New specific window settings");
+}
+
+bool RulesModel::isWarningShown()
+{
+    const bool no_wmclass = !m_rules["wmclass"]->isEnabled()
+                                || m_rules["wmclass"]->policy() == Rules::UnimportantMatch;
+    const bool alltypes = !m_rules["types"]->isEnabled()
+                              || m_rules["types"]->value() == 0
+                              || m_rules["types"]->value() == 0x3FF;
+
+    return (no_wmclass && alltypes);
+}
+
+
+
 void RulesModel::init()
 {
     setDescription(QString());
@@ -159,6 +201,135 @@ void RulesModel::init()
     }
     endResetModel();
 }
+
+void RulesModel::readFromConfig(KConfigGroup *config)
+{
+    const QString desc = config->readEntry(QLatin1String("Description"));
+    setDescription(desc);
+
+    beginResetModel();
+    for (RuleItem *rule : qAsConst(m_ruleList)) {
+        if (!config->hasKey(rule->key())) {
+            rule->reset();
+            continue;
+        }
+
+        rule->setEnabled(true);
+
+        const QVariant value = config->readEntry(rule->key());
+        rule->setValue(value);
+
+        if (rule->policyType() != RulePolicy::NoPolicy) {
+            const int policy = config->readEntry(rule->policyKey(), int());
+            rule->setPolicy(policy);
+        }
+    }
+    endResetModel();
+
+    emit descriptionChanged();
+    emit defaultDescriptionChanged();
+    emit showWarningChanged();
+}
+
+void RulesModel::writeToConfig(KConfigGroup *config) const
+{
+    if (!m_description.isEmpty()) {
+        config->writeEntry(QLatin1String("Description"), m_description);
+    } else {
+        config->writeEntry(QLatin1String("Description"), defaultDescription());
+    }
+
+    for (const RuleItem *rule : qAsConst(m_ruleList)) {
+        const bool ruleHasPolicy = rule->policyType() != RulePolicy::NoPolicy;
+
+        //TODO: Add condition `&& rule->policy() > 0` to match the classic RuleWidget behavior
+        //      after implementing policy management in the UI
+        if (rule->isEnabled()) {
+            config->writeEntry(rule->key(), rule->value(), KConfig::Persistent);
+            if (ruleHasPolicy) {
+                config->writeEntry(rule->policyKey(), rule->policy(), KConfig::Persistent);
+            }
+        } else {
+            config->deleteEntry(rule->key(), KConfig::Persistent);
+            if (ruleHasPolicy) {
+                config->deleteEntry(rule->policyKey(), KConfig::Persistent);
+            }
+        }
+    }
+}
+
+void RulesModel::prefillProperties(const QVariantMap &info)
+{
+    beginResetModel();
+
+    const QString position = QStringLiteral("%1,%2").arg(info.value("x").toInt())
+                                                    .arg(info.value("y").toInt());
+    const QString size = QStringLiteral("%1,%2").arg(info.value("width").toInt())
+                                                .arg(info.value("height").toInt());
+
+    if (!m_rules["position"]->isEnabled()) {
+        m_rules["position"]->setValue(position);
+    }
+    if (!m_rules["size"]->isEnabled()) {
+        m_rules["size"]->setValue(size);
+    }
+    if (!m_rules["minsize"]->isEnabled()) {
+        m_rules["minsize"]->setValue(size);
+    }
+    if (!m_rules["maxsize"]->isEnabled()) {
+        m_rules["maxsize"]->setValue(size);
+    }
+
+    for (QString &property : info.keys()) {
+        const QString ruleKey = m_ruleForProperty.value(property, QString());
+        if (ruleKey.isEmpty() || m_rules[ruleKey]->isEnabled()) {
+            continue;
+        }
+
+        const QVariant value = info.value(property);
+        m_rules[ruleKey]->setValue(value);
+    }
+
+    endResetModel();
+
+    emit showWarningChanged();
+}
+
+void RulesModel::importFromRules(Rules* rules)
+{
+    if (rules == nullptr) {
+        init();
+        return;
+    }
+
+    QTemporaryFile tempFile;
+    if (!tempFile.open()) {
+        return;
+    }
+    const QString tempPath = tempFile.fileName();
+    KConfig config(tempPath, KConfig::SimpleConfig);
+    KConfigGroup cfg(&config, QLatin1String("KWinRule_temp"));
+
+    rules->write(cfg);
+    readFromConfig(&cfg);
+}
+
+Rules *RulesModel::exportToRules() const
+{
+    QTemporaryFile tempFile;
+    if (!tempFile.open()) {
+        return nullptr;
+    }
+    const QString tempPath = tempFile.fileName();
+    KConfig config(tempPath, KConfig::SimpleConfig);
+    KConfigGroup cfg(&config, QLatin1String("KWinRule_temp"));
+
+    writeToConfig(&cfg);
+
+    Rules *rules = new Rules(cfg);
+    return rules;
+}
+
 
 void RulesModel::initRuleList()
 {
@@ -194,7 +365,8 @@ void RulesModel::initRuleList()
                          QStringLiteral("edit-comment")));
     m_rules["title"]->setFlags(RuleItem::AffectsDescription);
 
-    addRule(new RuleItem(QLatin1String("clientmachine"), RulePolicy::StringMatch, RuleType::String,
+    addRule(new RuleItem(QLatin1String("clientmachine"),
+                         RulePolicy::StringMatch, RuleType::String,
                          i18n("Machine (hostname)"), i18n("Window matching"),
                          QStringLiteral("computer")));
 
@@ -421,172 +593,4 @@ void RulesModel::initPropertyMap()
     m_ruleForProperty.insert(QStringLiteral("skipSwitcher"), QStringLiteral("skipswitcher"));
     m_ruleForProperty.insert(QStringLiteral("type"), QStringLiteral("type"));
     m_ruleForProperty.insert(QStringLiteral("desktopFile"), QStringLiteral("desktopfile"));
-}
-
-
-const QString RulesModel::description() const
-{
-    return m_description;
-}
-
-void RulesModel::setDescription(const QString& name)
-{
-    if (m_description != name) {
-        m_description = name;
-        emit descriptionChanged();
-    }
-}
-
-const QString RulesModel::defaultDescription() const
-{
-    const QString wmclass = m_rules["wmclass"]->value().toString();
-    const QString title = m_rules["title"]->isEnabled() ? m_rules["title"]->value().toString() : QString();
-
-    if (!title.isEmpty()) {
-        return i18n("Window settings for %1", title);
-    }
-    if (!wmclass.isEmpty()) {
-        return i18n("Settings for %1", wmclass);
-    }
-
-    return i18n("New specific window settings");
-}
-
-bool RulesModel::isWarningShown()
-{
-    const bool no_wmclass = !m_rules["wmclass"]->isEnabled()
-                                || m_rules["wmclass"]->policy() == Rules::UnimportantMatch;
-    const bool alltypes = !m_rules["types"]->isEnabled()
-                              || m_rules["types"]->value() == 0
-                              || m_rules["types"]->value() == 0x3FF;
-
-    return (no_wmclass && alltypes);
-}
-
-void RulesModel::readFromConfig(KConfigGroup *config)
-{
-    const QString desc = config->readEntry(QLatin1String("Description"));
-    setDescription(desc);
-
-    beginResetModel();
-    for (RuleItem *rule : qAsConst(m_ruleList)) {
-        if (!config->hasKey(rule->key())) {
-            rule->reset();
-            continue;
-        }
-
-        rule->setEnabled(true);
-
-        const QVariant value = config->readEntry(rule->key());
-        rule->setValue(value);
-
-        if (rule->policyType() != RulePolicy::NoPolicy) {
-            const int policy = config->readEntry(rule->policyKey(), int());
-            rule->setPolicy(policy);
-        }
-    }
-    endResetModel();
-
-    emit descriptionChanged();
-    emit defaultDescriptionChanged();
-    emit showWarningChanged();
-}
-
-void RulesModel::writeToConfig(KConfigGroup *config) const
-{
-    if (!m_description.isEmpty()) {
-        config->writeEntry(QLatin1String("Description"), m_description);
-    } else {
-        config->writeEntry(QLatin1String("Description"), defaultDescription());
-    }
-
-    for (const RuleItem *rule : qAsConst(m_ruleList)) {
-        const bool ruleHasPolicy = rule->policyType() != RulePolicy::NoPolicy;
-
-        //TODO: Add condition `&& rule->policy() > 0` to match the classic RuleWidget behavior
-        //      after implementing policy management in the UI
-        if (rule->isEnabled()) {
-            config->writeEntry(rule->key(), rule->value(), KConfig::Persistent);
-            if (ruleHasPolicy) {
-                config->writeEntry(rule->policyKey(), rule->policy(), KConfig::Persistent);
-            }
-        } else {
-            config->deleteEntry(rule->key(), KConfig::Persistent);
-            if (ruleHasPolicy) {
-                config->deleteEntry(rule->policyKey(), KConfig::Persistent);
-            }
-        }
-    }
-}
-
-void RulesModel::prefillProperties(const QVariantMap &info)
-{
-    beginResetModel();
-
-    const QString position = QStringLiteral("%1,%2").arg(info.value("x").toInt())
-                                                    .arg(info.value("y").toInt());
-    const QString size = QStringLiteral("%1,%2").arg(info.value("width").toInt())
-                                                .arg(info.value("height").toInt());
-
-    if (!m_rules["position"]->isEnabled()) {
-        m_rules["position"]->setValue(position);
-    }
-    if (!m_rules["size"]->isEnabled()) {
-        m_rules["size"]->setValue(size);
-    }
-    if (!m_rules["minsize"]->isEnabled()) {
-        m_rules["minsize"]->setValue(size);
-    }
-    if (!m_rules["maxsize"]->isEnabled()) {
-        m_rules["maxsize"]->setValue(size);
-    }
-
-    for (QString &property : info.keys()) {
-        const QString ruleKey = m_ruleForProperty.value(property, QString());
-        if (ruleKey.isEmpty() || m_rules[ruleKey]->isEnabled()) {
-            continue;
-        }
-
-        const QVariant value = info.value(property);
-        m_rules[ruleKey]->setValue(value);
-    }
-
-    endResetModel();
-
-    emit showWarningChanged();
-}
-
-void RulesModel::importFromRules(Rules* rules)
-{
-    if (rules == nullptr) {
-        init();
-        return;
-    }
-
-    QTemporaryFile tempFile;
-    if (!tempFile.open()) {
-        return;
-    }
-    const QString tempPath = tempFile.fileName();
-    KConfig config(tempPath, KConfig::SimpleConfig);
-    KConfigGroup cfg(&config, QLatin1String("KWinRule_temp"));
-
-    rules->write(cfg);
-    readFromConfig(&cfg);
-}
-
-Rules *RulesModel::exportToRules() const
-{
-    QTemporaryFile tempFile;
-    if (!tempFile.open()) {
-        return nullptr;
-    }
-    const QString tempPath = tempFile.fileName();
-    KConfig config(tempPath, KConfig::SimpleConfig);
-    KConfigGroup cfg(&config, QLatin1String("KWinRule_temp"));
-
-    writeToConfig(&cfg);
-
-    Rules *rules = new Rules(cfg);
-    return rules;
 }
