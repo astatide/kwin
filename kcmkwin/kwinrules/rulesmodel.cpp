@@ -429,11 +429,11 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("ignoregeometry"),
                          RulePolicy::SetRule, RuleType::Boolean,
                          i18n("Ignore requested geometry"), i18n("Size & Position"),
-                         QStringLiteral("view-time-schedule-baselined-remove"),
-                         i18n("Windows can ask to appear in a certain position.\n"
-                              "By default this overrides the placement strategy\n"
-                              "what might be nasty if the client abuses the feature\n"
-                              "to unconditionally popup in the middle of your screen.")));
+                         QStringLiteral("view-time-schedule-baselined-remove")));
+    m_rules["ignoregeometry"]->setDescription(i18n("Windows can ask to appear in a certain position.\n"
+                                                   "By default this overrides the placement strategy\n"
+                                                   "what might be nasty if the client abuses the feature\n"
+                                                   "to unconditionally popup in the middle of your screen."));
 
     addRule(new RuleItem(QLatin1String("minsize"),
                          RulePolicy::ForceRule, RuleType::Coordinate,
@@ -448,12 +448,12 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("strictgeometry"),
                          RulePolicy::ForceRule, RuleType::Boolean,
                          i18n("Obey geometry restrictions"), i18n("Size & Position"),
-                         QStringLiteral("transform-crop-and-resize"),
-                         i18n("Eg. terminals or video players can ask to keep a certain aspect ratio\n"
-                              "or only grow by values larger than one\n"
-                              "(eg. by the dimensions of one character).\n"
-                              "This may be pointless and the restriction prevents arbitrary dimensions\n"
-                              "like your complete screen area.")));
+                         QStringLiteral("transform-crop-and-resize")));
+    m_rules["strictgeometry"]->setDescription(i18n("Eg. terminals or video players can ask to keep a certain aspect ratio\n"
+                                                   "or only grow by values larger than one\n"
+                                                   "(eg. by the dimensions of one character).\n"
+                                                   "This may be pointless and the restriction prevents arbitrary dimensions\n"
+                                                   "like your complete screen area."));
 
     // Arrangement & Access
     addRule(new RuleItem(QLatin1String("above"),
@@ -469,20 +469,20 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("skiptaskbar"),
                          RulePolicy::SetRule, RuleType::Boolean,
                          i18n("Skip taskbar"), i18n("Arrangement & Access"),
-                         QStringLiteral("kt-show-statusbar"),
-                         i18n("Window shall (not) appear in the taskbar.")));
+                         QStringLiteral("kt-show-statusbar")));
+    m_rules["skiptaskbar"]->setDescription(i18n("Window shall (not) appear in the taskbar."));
 
     addRule(new RuleItem(QLatin1String("skippager"),
                          RulePolicy::SetRule, RuleType::Boolean,
                          i18n("Skip pager"), i18n("Arrangement & Access"),
-                         QStringLiteral("org.kde.plasma.pager"),
-                         i18n("Window shall (not) appear in the manager for virtual desktops")));
+                         QStringLiteral("org.kde.plasma.pager")));
+    m_rules["skippager"]->setDescription(i18n("Window shall (not) appear in the manager for virtual desktops"));
 
     addRule(new RuleItem(QLatin1String("skipswitcher"),
                          RulePolicy::SetRule, RuleType::Boolean,
                          i18n("Skip switcher"), i18n("Arrangement & Access"),
-                         QStringLiteral("preferences-system-windows-effect-flipswitch"),
-                         i18n("Window shall (not) appear in the Alt+Tab list")));
+                         QStringLiteral("preferences-system-windows-effect-flipswitch")));
+    m_rules["skipswitcher"]->setDescription(i18n("Window shall (not) appear in the Alt+Tab list"));
 
     addRule(new RuleItem(QLatin1String("shortcut"),
                          RulePolicy::SetRule, RuleType::Shortcut,
@@ -513,43 +513,43 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("fsplevel"),
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Focus stealing prevention"), i18n("Appearance & Fixes"),
-                         QStringLiteral("preferences-system-windows-effect-glide"),
-                         i18n("KWin tries to prevent windows from taking the focus\n"
-                              "(\"activate\") while you're working in another window,\n"
-                              "but this may sometimes fail or superact.\n"
-                              "\"None\" will unconditionally allow this window to get the focus while\n"
-                              "\"Extreme\" will completely prevent it from taking the focus.")));
+                         QStringLiteral("preferences-system-windows-effect-glide")));
+    m_rules["fsplevel"]->setDescription(i18n("KWin tries to prevent windows from taking the focus\n"
+                                             "(\"activate\") while you're working in another window,\n"
+                                             "but this may sometimes fail or superact.\n"
+                                             "\"None\" will unconditionally allow this window to get the focus while\n"
+                                             "\"Extreme\" will completely prevent it from taking the focus."));
 
     addRule(new RuleItem(QLatin1String("fpplevel"),
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Focus protection"), i18n("Appearance & Fixes"),
-                         QStringLiteral("preferences-system-windows-effect-minimize"),
-                         i18n("This controls the focus protection of the currently active window.\n"
-                              "None will always give the focus away,\n"
-                              "Extreme will keep it.\n"
-                              "Otherwise it's interleaved with the stealing prevention\n"
-                              "assigned to the window that wants the focus.")));
+                         QStringLiteral("preferences-system-windows-effect-minimize")));
+    m_rules["fpplevel"]->setDescription(i18n("This controls the focus protection of the currently active window.\n"
+                                             "None will always give the focus away,\n"
+                                             "Extreme will keep it.\n"
+                                             "Otherwise it's interleaved with the stealing prevention\n"
+                                             "assigned to the window that wants the focus."));
 
     addRule(new RuleItem(QLatin1String("acceptfocus"),
                          RulePolicy::ForceRule, RuleType::Boolean,
                          i18n("Accept focus"), i18n("Appearance & Fixes"),
-                         QStringLiteral("preferences-desktop-cursors"),
-                         i18n("Windows may prevent to get the focus (activate) when being clicked.\n"
-                              "On the other hand you might wish to prevent a window\n"
-                              "from getting focused on a mouse click.")));
+                         QStringLiteral("preferences-desktop-cursors")));
+    m_rules["acceptfocus"]->setDescription(i18n("Windows may prevent to get the focus (activate) when being clicked.\n"
+                                                "On the other hand you might wish to prevent a window\n"
+                                                "from getting focused on a mouse click."));
 
     addRule(new RuleItem(QLatin1String("disableglobalshortcuts"),
                          RulePolicy::ForceRule, RuleType::Boolean,
                          i18n("Ignore global shortcuts"), i18n("Appearance & Fixes"),
-                         QStringLiteral("input-keyboard-virtual-off"),
-                         i18n("When used, a window will receive\n"
-                              "all keyboard inputs while it is active, including Alt+Tab etc.\n"
-                              "This is especially interesting for emulators or virtual machines.\n"
-                              "\n"
-                              "Be warned:\n"
-                              "you won't be able to Alt+Tab out of the window\n"
-                              "nor use any other global shortcut (such as Alt+F2 to show KRunner)\n"
-                              "while it's active!")));
+                         QStringLiteral("input-keyboard-virtual-off")));
+    m_rules["disableglobalshortcuts"]->setDescription(i18n("When used, a window will receive\n"
+                                                           "all keyboard inputs while it is active, including Alt+Tab etc.\n"
+                                                           "This is especially interesting for emulators or virtual machines.\n"
+                                                           "\n"
+                                                           "Be warned:\n"
+                                                           "you won't be able to Alt+Tab out of the window\n"
+                                                           "nor use any other global shortcut (such as Alt+F2 to show KRunner)\n"
+                                                           "while it's active!"));
 
     addRule(new RuleItem(QLatin1String("closeable"),
                          RulePolicy::ForceRule, RuleType::Boolean,

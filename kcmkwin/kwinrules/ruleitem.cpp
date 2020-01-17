@@ -32,9 +32,8 @@ RuleItem::RuleItem(const QString &key,
                    const RuleType type,
                    const QString &name,
                    const QString &section,
-                   const QString &iconName,
-                   const QString &description)
-    : d(new RuleItemPrivate(key, name, section, iconName, description))
+                   const QString &iconName)
+    : d(new RuleItemPrivate(key, name, section, iconName))
     , p(new RulePolicy(policyType))
 {
     d->m_type = type;
@@ -83,6 +82,12 @@ QString RuleItem::description() const
 {
     return d->m_description;
 }
+
+void RuleItem::setDescription(const QString& description)
+{
+    d->m_description = description;
+}
+
 
 bool RuleItem::isEnabled() const
 {

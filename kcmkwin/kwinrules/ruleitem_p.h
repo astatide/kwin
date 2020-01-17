@@ -44,13 +44,11 @@ public:
     RuleItemPrivate(const QString &key,
                     const QString &name,
                     const QString &section,
-                    const QString &iconName,
-                    const QString &description)
+                    const QString &iconName)
         : m_key(key)
         , m_name(name)
         , m_section(section)
         , m_iconName(iconName)
-        , m_description(description)
         , m_enabled(false)
         , m_flags(0)
         {};
@@ -60,9 +58,10 @@ public:
     QString m_name;
     QString m_section;
     QString m_iconName;
-    QString m_description;
 
     bool m_enabled;
+
+    QString m_description;
     uint m_flags;
 
     RuleType m_type;

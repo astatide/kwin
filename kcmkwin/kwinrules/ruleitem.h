@@ -47,8 +47,7 @@ public:
              const RuleType type,
              const QString &name,
              const QString &section,
-             const QString &iconName=QStringLiteral("window"),
-             const QString &description=QString());
+             const QString &iconName);
     ~RuleItem();
 
     QString key() const;
@@ -56,26 +55,27 @@ public:
     QString section() const;
     QString iconName() const;
     QIcon icon() const;
-    QString description() const;
 
     bool isEnabled() const;
+    void setEnabled(bool enabled);
+
+    QString description() const;
+    void setDescription(const QString &description);
 
     bool hasFlag(uint flag) const;
     void setFlags(uint flags, bool active=true);
 
     RuleType type() const;
     QVariant value() const;
+    void setValue(QVariant value);
 
     RulePolicy::Type policyType() const;
     int policy() const;          // int belongs to anonymous enum in Rules::
+    void setPolicy(int policy);  // int belongs to anonymous enum in Rules::
     int policyIndex() const;
+    void setPolicyIndex(int policyIndex);
     QStringList policyModel() const;
     QString policyKey() const;
-
-    void setEnabled(bool enabled);
-    void setValue(QVariant value);
-    void setPolicy(int policy);  // int belongs to anonymous enum in Rules::
-    void setPolicyIndex(int policyIndex);
 
     void reset();
 
