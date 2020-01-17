@@ -26,9 +26,17 @@
 #include <QIcon>
 #include <QTemporaryFile>
 
+#ifdef KWIN_BUILD_ACTIVITIES
+#include <KActivities/Consumer>
+#endif
+
+#include <KColorSchemeManager>
 #include <KLocalizedString>
+#include <KWindowSystem>
+
 
 using namespace KWin;
+
 
 RulesModel::RulesModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -98,6 +106,8 @@ QVariant RulesModel::data(const QModelIndex &index, int role) const
         return rule->policyIndex();
     case PolicyModelRole:
         return rule->policyModel();
+    case OptionsModelRole:
+        return rule->options();
     }
     return QVariant();
 }
@@ -356,7 +366,8 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("types"),
                          RulePolicy::NoPolicy, RuleType::FlagsOption,
                          i18n("Window types"), i18n("Window matching"),
-                         QStringLiteral("window-duplicate")));
+                         QStringLiteral("window-duplicate"),
+                         windowTypesModel()));
     m_rules["types"]->setFlags(RuleItem::StartEnabled | RuleItem::AffectsWarning );
 
     addRule(new RuleItem(QLatin1String("title"),
@@ -394,12 +405,14 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("desktop"),
                          RulePolicy::SetRule, RuleType::Option,
                          i18n("Virtual Desktop"), i18n("Size & Position"),
-                         QStringLiteral("virtual-desktops")));
+                         QStringLiteral("virtual-desktops"),
+                         virtualDesktopsModel()));
 #ifdef KWIN_BUILD_ACTIVITIES
     addRule(new RuleItem(QLatin1String("activity"),
                          RulePolicy::SetRule, RuleType::Option,
                          i18n("Activity"), i18n("Size & Position"),
-                         QStringLiteral("activities")));
+                         QStringLiteral("activities"),
+                         activitiesModel()));
 #endif
     addRule(new RuleItem(QLatin1String("screen"),
                          RulePolicy::SetRule, RuleType::Integer,
@@ -424,7 +437,8 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("placement"),
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Initial placement"), i18n("Size & Position"),
-                         QStringLiteral("preferences-system-windows-effect-presentwindows")));
+                         QStringLiteral("preferences-system-windows-effect-presentwindows"),
+                         placementModel()));
 
     addRule(new RuleItem(QLatin1String("ignoregeometry"),
                          RulePolicy::SetRule, RuleType::Boolean,
@@ -498,7 +512,8 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("decocolor"),
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Titlebar color scheme"), i18n("Appearance & Fixes"),
-                         QStringLiteral("preferences-desktop-theme")));
+                         QStringLiteral("preferences-desktop-theme"),
+                         colorSchemesModel()));
 
     addRule(new RuleItem(QLatin1String("opacityactive"),
                          RulePolicy::ForceRule, RuleType::Percentage,
@@ -513,7 +528,8 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("fsplevel"),
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Focus stealing prevention"), i18n("Appearance & Fixes"),
-                         QStringLiteral("preferences-system-windows-effect-glide")));
+                         QStringLiteral("preferences-system-windows-effect-glide"),
+                         focusModel()));
     m_rules["fsplevel"]->setDescription(i18n("KWin tries to prevent windows from taking the focus\n"
                                              "(\"activate\") while you're working in another window,\n"
                                              "but this may sometimes fail or superact.\n"
@@ -523,7 +539,8 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("fpplevel"),
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Focus protection"), i18n("Appearance & Fixes"),
-                         QStringLiteral("preferences-system-windows-effect-minimize")));
+                         QStringLiteral("preferences-system-windows-effect-minimize"),
+                         focusModel()));
     m_rules["fpplevel"]->setDescription(i18n("This controls the focus protection of the currently active window.\n"
                                              "None will always give the focus away,\n"
                                              "Extreme will keep it.\n"
@@ -559,7 +576,8 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("type"),
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Set window type"), i18n("Appearance & Fixes"),
-                         QStringLiteral("window-duplicate")));
+                         QStringLiteral("window-duplicate"),
+                         windowTypesModel()));
 
     addRule(new RuleItem(QLatin1String("desktopfile"),
                          RulePolicy::SetRule, RuleType::String,
@@ -593,4 +611,100 @@ void RulesModel::initPropertyMap()
     m_ruleForProperty.insert(QStringLiteral("skipSwitcher"), QStringLiteral("skipswitcher"));
     m_ruleForProperty.insert(QStringLiteral("type"), QStringLiteral("type"));
     m_ruleForProperty.insert(QStringLiteral("desktopFile"), QStringLiteral("desktopfile"));
+}
+
+QList<OptionsModel::Data> RulesModel::windowTypesModel() const
+{
+    return {
+        { NET::Normal,  i18n("Normal Window")      },
+        { NET::Dialog,  i18n("Dialog Window")      },
+        { NET::Utility, i18n("Utility Window")     },
+        { NET::Dock,    i18n("Dock (panel)")       },
+        { NET::Toolbar, i18n("Toolbar")            },
+        { NET::Menu,    i18n("Torn-Off Menu")      },
+        { NET::Splash,  i18n("Splash Screen")      },
+        { NET::Desktop, i18n("Desktop")            },
+//        { NET::Override,i18n("Unmanaged Window")   },  deprecated
+        { NET::TopMenu, i18n("Standalone Menubar") }
+    };
+}
+
+QList<OptionsModel::Data> RulesModel::virtualDesktopsModel() const
+{
+    QList<OptionsModel::Data> model;
+    for (int i = 1; i <= KWindowSystem::numberOfDesktops(); ++i) {
+        model << OptionsModel::Data{ i, QString::number(i).rightJustified(2) + ':' + KWindowSystem::desktopName(i) };
+    }
+    model << OptionsModel::Data{ NET::OnAllDesktops, i18n("All Desktops") };
+    return model;
+}
+
+#ifdef KWIN_BUILD_ACTIVITIES
+
+// TODO: If necesary, connect to consumer signals to update the activity model
+QList<OptionsModel::Data> RulesModel::activitiesModel() const
+{
+    QList<OptionsModel::Data> model;
+
+    // cloned from kactivities/src/lib/core/consumer.cpp
+    #define NULL_UUID "00000000-0000-0000-0000-000000000000"
+    model << OptionsModel::Data{ QString::fromLatin1(NULL_UUID), i18n("All Activities") };
+    #undef NULL_UUID
+
+    KActivities::Consumer *consumer = new KActivities::Consumer();
+    const auto activities = consumer->activities(KActivities::Info::Running);
+    if (consumer->serviceStatus() == KActivities::Consumer::Running) {
+        for (const QString &activityId : activities) {
+            const KActivities::Info info(activityId);
+            model << OptionsModel::Data{ activityId, info.name() };
+        }
+    }
+
+    return model;
+}
+#endif
+
+QList<OptionsModel::Data> RulesModel::placementModel() const
+{
+    return {
+        { Placement::Default,      i18n("Default")             },
+        { Placement::NoPlacement,  i18n("No Placement")        },
+        { Placement::Smart,        i18n("Minimal Overlapping") },
+        { Placement::Maximizing,   i18n("Maximized")           },
+        { Placement::Cascade,      i18n("Cascaded")            },
+        { Placement::Centered,     i18n("Centered")            },
+        { Placement::Random,       i18n("Random")              },
+        { Placement::ZeroCornered, i18n("In Top-Left Corner")  },
+        { Placement::UnderMouse,   i18n("Under Mouse")         },
+        { Placement::OnMainWindow, i18n("On Main Window")      }
+    };
+}
+
+QList<OptionsModel::Data> RulesModel::focusModel() const
+{
+    return {
+        { 0, i18n("None")    },
+        { 1, i18n("Low")     },
+        { 2, i18n("Normal")  },
+        { 3, i18n("High")    },
+        { 4, i18n("Extreme") }
+    };
+}
+
+//TODO: When full model is implemented, return the color scheme model directly
+QList<OptionsModel::Data> RulesModel::colorSchemesModel() const
+{
+    QList<OptionsModel::Data> model;
+
+    KColorSchemeManager *schemes = new KColorSchemeManager();
+    QAbstractItemModel *schemesModel = schemes->model();
+
+    for (int r = 0; r < schemesModel->rowCount(); r++) {
+        auto schemeInfo = schemesModel->itemData(schemesModel->index(r, 0));
+        model << OptionsModel::Data{ schemeInfo[Qt::UserRole], schemeInfo[Qt::DisplayRole].toString() };
+    }
+
+    delete schemes;
+
+    return model;
 }

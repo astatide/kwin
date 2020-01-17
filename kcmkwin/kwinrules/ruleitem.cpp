@@ -32,9 +32,12 @@ RuleItem::RuleItem(const QString &key,
                    const RuleType type,
                    const QString &name,
                    const QString &section,
-                   const QString &iconName)
+                   const QString &iconName,
+                   const QList<OptionsModel::Data> &options
+                  )
     : d(new RuleItemPrivate(key, name, section, iconName))
     , p(new RulePolicy(policyType))
+    , o(new OptionsModel(options))
 {
     d->m_type = type;
     setValue(QVariant());
@@ -44,6 +47,7 @@ RuleItem::~RuleItem()
 {
     delete d;
     delete p;
+    delete o;
 }
 
 void RuleItem::reset()
@@ -126,6 +130,11 @@ QVariant RuleItem::value() const
 void RuleItem::setValue(QVariant value)
 {
     d->m_value = typedValue(value, d->m_type);
+}
+
+QStringList RuleItem::options() const
+{
+    return o->descriptionList();
 }
 
 int RuleItem::policy() const

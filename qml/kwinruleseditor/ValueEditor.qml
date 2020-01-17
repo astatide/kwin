@@ -92,7 +92,8 @@ Loader {
         id: optionEditor
         QQC2.ComboBox {
             flat: true
-            onCurrentTextChanged: valueEditor.valueEdited(currentText)
+            model: options
+            onActivated: valueEditor.valueEdited(currentText)
         }
     }
 
@@ -104,12 +105,14 @@ Loader {
             spacing: 0
             Repeater {
                 id: flagsRepeater
-                model: 10
+                model: options
                 QQC2.ToolButton {
                     property int bit: index
                     icon.name: "window-duplicate"
                     checkable: true
                     checked: ((modelValue & (1 << bit)) >> bit) == 1
+                    QQC2.ToolTip.text: modelData
+                    QQC2.ToolTip.visible: hovered
                     onToggled: {
                         valueEditor.valueEdited((modelValue & ~(1 << bit)) | (checked << bit));
                     }

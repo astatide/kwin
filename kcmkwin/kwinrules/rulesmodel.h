@@ -93,6 +93,13 @@ private:
     void initPropertyMap();
     RuleItem *addRule(RuleItem *rule);
 
+    QList<OptionsModel::Data> windowTypesModel() const;
+    QList<OptionsModel::Data> virtualDesktopsModel() const;
+    QList<OptionsModel::Data> activitiesModel() const;
+    QList<OptionsModel::Data> placementModel() const;
+    QList<OptionsModel::Data> focusModel() const;
+    QList<OptionsModel::Data> colorSchemesModel() const;
+
 private:
     QList<RuleItem *> m_ruleList;
     QHash<QString, RuleItem *> m_rules;

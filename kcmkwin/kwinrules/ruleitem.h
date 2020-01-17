@@ -47,7 +47,9 @@ public:
              const RuleType type,
              const QString &name,
              const QString &section,
-             const QString &iconName);
+             const QString &iconName = QStringLiteral("window"),
+             const QList<OptionsModel::Data> &options = {}
+            );
     ~RuleItem();
 
     QString key() const;
@@ -69,6 +71,8 @@ public:
     QVariant value() const;
     void setValue(QVariant value);
 
+    QStringList options() const;
+
     RulePolicy::Type policyType() const;
     int policy() const;          // int belongs to anonymous enum in Rules::
     void setPolicy(int policy);  // int belongs to anonymous enum in Rules::
@@ -85,6 +89,7 @@ private:
 private:
     RuleItemPrivate *d;
     RulePolicy *p;
+    OptionsModel *o;
 };
 
 }   //namespace
