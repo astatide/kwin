@@ -87,11 +87,16 @@ QQC2.ItemDelegate {
             enabled: itemIsEnabled
 
             model: policyModel
-            currentIndex: policy
+            textRole: "text"
+            currentIndex: model.selectedIndex
             onActivated: {
                 print ("Policy changed for: " + key + " policyId: " + index);
-                policy = index;
+                model.selectedIndex = currentIndex;
             }
+            //FIXME: After Qt 5.14
+            //valueRole: "value"
+            //currentValue: policy
+            //onActivated: { policy = currentValue; }
         }
 
         ValueEditor {

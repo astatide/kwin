@@ -41,6 +41,10 @@ RuleItem::RuleItem(const QString &key,
 {
     d->m_type = type;
     setValue(QVariant());
+
+    //FIXME: After Qt 5.14
+    connect(p, &OptionsModel::selectedIndexChanged, this, &RuleItem::policyChanged);
+    connect(o, &OptionsModel::selectedIndexChanged, this, &RuleItem::valueChanged);
 }
 
 RuleItem::~RuleItem()
@@ -154,16 +158,6 @@ void RuleItem::setPolicy(int policy)
     p->setValue(policy);
 }
 
-int RuleItem::policyIndex() const
-{
-    return p->selectedIndex();
-}
-
-void RuleItem::setPolicyIndex(int policyIndex)
-{
-    p->setSelectedIndex(policyIndex);
-}
-
 RulePolicy::Type RuleItem::policyType() const
 {
     return p->type();
@@ -171,8 +165,7 @@ RulePolicy::Type RuleItem::policyType() const
 
 QVariant RuleItem::policyModel() const
 {
-    return p->displayList();
-    //return QVariant::fromValue(p);
+    return QVariant::fromValue(p);
 }
 
 QString RuleItem::policyKey() const
@@ -294,7 +287,7 @@ RulePolicy::Type RulePolicy::type() const
 int RulePolicy::value() const
 {
     if (m_type == RulePolicy::NoPolicy) {
-        return Rules::Apply;   // To simplify external checks (!=0) when rule has no policy
+        return Rules::Apply;   // To simplify external checks when rule has no policy
     }
     return OptionsModel::value().toInt();
 }

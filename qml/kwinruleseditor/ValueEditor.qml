@@ -96,7 +96,10 @@ Loader {
             model: ruleOptions
             textRole: "text"
             currentIndex: model.selectedIndex
-            onActivated: { model.selectedIndex = currentIndex; }
+            onActivated: {
+                print ("Rule changed: " + key + " INDEX := " + currentIndex)
+                model.selectedIndex = currentIndex;
+            }
             //FIXME: After Qt 5.14
             //valueRole: "value"
             //currentValue: modelValue

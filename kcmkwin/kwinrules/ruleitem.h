@@ -31,6 +31,8 @@ namespace KWin
 
 class RuleItem : public QObject
 {
+    Q_OBJECT
+
 public:
     enum Flags {
         NoFlags            = 0,
@@ -76,12 +78,17 @@ public:
     RulePolicy::Type policyType() const;
     int policy() const;          // int belongs to anonymous enum in Rules::
     void setPolicy(int policy);  // int belongs to anonymous enum in Rules::
-    int policyIndex() const;
-    void setPolicyIndex(int policyIndex);
     QVariant policyModel() const;
     QString policyKey() const;
 
     void reset();
+
+//FIXME: After Qt 5.14, the QQC2.ComboBox allows to use the main model interface
+//       Until then, we need to connect the internal models `selectedIndex`changes
+//       to the external model
+signals:
+    void valueChanged(QVariant value);
+    void policyChanged(int policy);
 
 private:
     static QVariant typedValue(const QVariant &value, const RuleType type);

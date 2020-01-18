@@ -52,7 +52,7 @@ public:
         SelectableRole,
         ValueRole,
         TypeRole,
-        PolicyIdRole,
+        PolicyRole,
         PolicyModelRole,
         OptionsModelRole
     };

@@ -58,7 +58,7 @@ QHash< int, QByteArray > RulesModel::roleNames() const
         {SelectableRole,    QByteArrayLiteral("selectable")},
         {ValueRole,         QByteArrayLiteral("value")},
         {TypeRole,          QByteArrayLiteral("type")},
-        {PolicyIdRole,      QByteArrayLiteral("policy")},
+        {PolicyRole,        QByteArrayLiteral("policy")},
         {PolicyModelRole,   QByteArrayLiteral("policyModel")},
         {OptionsModelRole,  QByteArrayLiteral("options")},
     };
@@ -101,8 +101,8 @@ QVariant RulesModel::data(const QModelIndex &index, int role) const
         return rule->value();
     case TypeRole:
         return rule->type();
-    case PolicyIdRole:
-        return rule->policyIndex();
+    case PolicyRole:
+        return rule->policy();
     case PolicyModelRole:
         return rule->policyModel();
     case OptionsModelRole:
@@ -126,8 +126,8 @@ bool RulesModel::setData(const QModelIndex & index, const QVariant & value, int 
     case ValueRole:
         rule->setValue(value);
         break;
-    case PolicyIdRole:
-        rule->setPolicyIndex(value.toInt());
+    case PolicyRole:
+        rule->setPolicy(value.toInt());
         break;
     default:
         return false;
@@ -157,7 +157,6 @@ RuleItem *RulesModel::operator[](const QString& key) const
 {
     return m_rules[key];
 }
-
 
 const QString RulesModel::description() const
 {
@@ -199,14 +198,22 @@ bool RulesModel::isWarningShown()
 }
 
 
-
 void RulesModel::init()
 {
     setDescription(QString());
 
     beginResetModel();
+    int row = 0;
     for (RuleItem *rule : qAsConst(m_ruleList)) {
         rule->reset();
+        //FIXME: After Qt 5.14, the QQC2.ComboBox allows to use the main model interface
+        //       Until then, we need to connect the internal models `selectedIndex`changes
+        //       to the external model
+        const QModelIndex index = this->index(row, 0);
+        connect(rule, &RuleItem::valueChanged,  this, [this, index](QVariant value){ setData(index, value, RulesModel::ValueRole); });
+        connect(rule, &RuleItem::policyChanged, this, [this, index](QVariant policy){ setData(index, policy, RulesModel::PolicyRole); });
+
+        row++;
     }
     endResetModel();
 }
