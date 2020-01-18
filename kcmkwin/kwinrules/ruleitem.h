@@ -71,14 +71,14 @@ public:
     QVariant value() const;
     void setValue(QVariant value);
 
-    QStringList options() const;
+    QVariant options() const;
 
     RulePolicy::Type policyType() const;
     int policy() const;          // int belongs to anonymous enum in Rules::
     void setPolicy(int policy);  // int belongs to anonymous enum in Rules::
     int policyIndex() const;
     void setPolicyIndex(int policyIndex);
-    QStringList policyModel() const;
+    QVariant policyModel() const;
     QString policyKey() const;
 
     void reset();

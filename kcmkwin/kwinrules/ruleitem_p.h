@@ -21,7 +21,7 @@
 #ifndef KWIN_RULEITEM_P_H
 #define KWIN_RULEITEM_P_H
 
-#include <QVariant>
+#include <QAbstractListModel>
 
 namespace KWin {
 
@@ -69,33 +69,43 @@ public:
 };
 
 
-class OptionsModel
+class OptionsModel : public QAbstractListModel
 {
+    Q_OBJECT
+
+    Q_PROPERTY(int selectedIndex READ selectedIndex WRITE setSelectedIndex NOTIFY selectedIndexChanged)
+
 public:
     struct Data {
         QVariant value;
         QString text;
-//        QString iconName;
-//        QString description;
+        QString iconName {};
+        QString description {};
     };
 
 public:
-    OptionsModel() : m_data(), m_index(0) {};
-    OptionsModel(QList<Data> data) : m_data(data), m_index(0) {};
+    OptionsModel() : QAbstractListModel(), m_data(), m_index(0) {};
+    OptionsModel(QList<Data> data) : QAbstractListModel(), m_data(data), m_index(0) {};
 
-    QStringList descriptionList() const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    QHash<int, QByteArray> roleNames() const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+
+    QStringList displayList() const;
 
     QVariant value() const;
     void setValue(QVariant value);
 
-    int index() const;
-    void setIndex(int index);
+    int selectedIndex() const;
+    void setSelectedIndex(int index);
+
+signals:
+    void selectedIndexChanged(int index);
 
 protected:
     QList<Data> m_data;
     int m_index = 0;
 };
-
 
 class RulePolicy : public OptionsModel
 {

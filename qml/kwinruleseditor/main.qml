@@ -79,9 +79,9 @@ ColumnLayout {
             }
             QQC2.ToolButton {
                 id: editModeButton
-                icon.name: 'list-add'
+                icon.name: checked ? 'view-visible' : 'view-hidden'
                 checkable: true
-                text: i18n("Add/Remove Rules")
+                text: i18n("Show all rules")
             }
     }
 

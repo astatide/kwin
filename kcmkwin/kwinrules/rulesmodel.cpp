@@ -22,7 +22,7 @@
 #include "rulesmodel.h"
 #include <rules.h>
 
-#include <QDebug>
+#include <QFileInfo>
 #include <QIcon>
 #include <QTemporaryFile>
 
@@ -47,7 +47,7 @@ RulesModel::RulesModel(QObject *parent)
 
 QHash< int, QByteArray > RulesModel::roleNames() const
 {
-    QHash<int, QByteArray> roles({
+    return {
         {KeyRole,           QByteArrayLiteral("key")},
         {NameRole,          QByteArrayLiteral("name")},
         {IconRole,          QByteArrayLiteral("icon")},
@@ -61,8 +61,7 @@ QHash< int, QByteArray > RulesModel::roleNames() const
         {PolicyIdRole,      QByteArrayLiteral("policy")},
         {PolicyModelRole,   QByteArrayLiteral("policyModel")},
         {OptionsModelRole,  QByteArrayLiteral("options")},
-    });
-    return roles;
+    };
 }
 
 int RulesModel::rowCount(const QModelIndex &parent) const
@@ -339,7 +338,6 @@ Rules *RulesModel::exportToRules() const
     Rules *rules = new Rules(cfg);
     return rules;
 }
-
 
 void RulesModel::initRuleList()
 {
@@ -631,12 +629,12 @@ QList<OptionsModel::Data> RulesModel::windowTypesModel() const
 
 QList<OptionsModel::Data> RulesModel::virtualDesktopsModel() const
 {
-    QList<OptionsModel::Data> model;
+    QList<OptionsModel::Data> modelData;
     for (int i = 1; i <= KWindowSystem::numberOfDesktops(); ++i) {
-        model << OptionsModel::Data{ i, QString::number(i).rightJustified(2) + ':' + KWindowSystem::desktopName(i) };
+        modelData << OptionsModel::Data{ i, QString::number(i).rightJustified(2) + ':' + KWindowSystem::desktopName(i) };
     }
-    model << OptionsModel::Data{ NET::OnAllDesktops, i18n("All Desktops") };
-    return model;
+    modelData << OptionsModel::Data{ NET::OnAllDesktops, i18n("All Desktops") };
+    return modelData;
 }
 
 #ifdef KWIN_BUILD_ACTIVITIES
@@ -644,11 +642,11 @@ QList<OptionsModel::Data> RulesModel::virtualDesktopsModel() const
 // TODO: If necesary, connect to consumer signals to update the activity model
 QList<OptionsModel::Data> RulesModel::activitiesModel() const
 {
-    QList<OptionsModel::Data> model;
+    QList<OptionsModel::Data> modelData;
 
     // cloned from kactivities/src/lib/core/consumer.cpp
     #define NULL_UUID "00000000-0000-0000-0000-000000000000"
-    model << OptionsModel::Data{ QString::fromLatin1(NULL_UUID), i18n("All Activities") };
+    modelData << OptionsModel::Data{ QString::fromLatin1(NULL_UUID), i18n("All Activities") };
     #undef NULL_UUID
 
     KActivities::Consumer *consumer = new KActivities::Consumer();
@@ -656,11 +654,11 @@ QList<OptionsModel::Data> RulesModel::activitiesModel() const
     if (consumer->serviceStatus() == KActivities::Consumer::Running) {
         for (const QString &activityId : activities) {
             const KActivities::Info info(activityId);
-            model << OptionsModel::Data{ activityId, info.name() };
+            modelData << OptionsModel::Data{ activityId, info.name() };
         }
     }
 
-    return model;
+    return modelData;
 }
 #endif
 
@@ -694,17 +692,17 @@ QList<OptionsModel::Data> RulesModel::focusModel() const
 //TODO: When full model is implemented, return the color scheme model directly
 QList<OptionsModel::Data> RulesModel::colorSchemesModel() const
 {
-    QList<OptionsModel::Data> model;
+    QList<OptionsModel::Data> modelData;
 
     KColorSchemeManager *schemes = new KColorSchemeManager();
     QAbstractItemModel *schemesModel = schemes->model();
 
     for (int r = 0; r < schemesModel->rowCount(); r++) {
         auto schemeInfo = schemesModel->itemData(schemesModel->index(r, 0));
-        model << OptionsModel::Data{ schemeInfo[Qt::UserRole], schemeInfo[Qt::DisplayRole].toString() };
+        modelData << OptionsModel::Data{ schemeInfo[Qt::UserRole], schemeInfo[Qt::DisplayRole].toString() };
     }
 
     delete schemes;
 
-    return model;
+    return modelData;
 }

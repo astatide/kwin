@@ -28,8 +28,10 @@ import org.kde.kirigami 2.10 as Kirigami
 // Traceback is not much helpful (Crashing... crashRecursionCounter = 2)
 
 QQC2.ItemDelegate {
-    //visible: enabled
+    id: ruleDelegate
+
     property bool editMode: false
+    property bool itemIsEnabled: model.enabled
 
     enabled: model.enabled || editMode
     height: enabled ? 2.1 * Kirigami.Units.gridUnit : 0
@@ -59,7 +61,7 @@ QQC2.ItemDelegate {
         }
 
         QQC2.CheckBox {
-            visible: editMode
+            //visible: editMode
             opacity: model.selectable ? 1 : 0
             checked: model.enabled
             onToggled: { model.enabled = checked; }
@@ -73,7 +75,6 @@ QQC2.ItemDelegate {
 
         QQC2.Label {
             text: model.name
-            font.bold: model.enabled
             Layout.fillWidth: true
         }
 
@@ -83,7 +84,7 @@ QQC2.ItemDelegate {
             flat: true
 
             visible: count > 0
-            enabled: valueEditor.enabled
+            enabled: itemIsEnabled
 
             model: policyModel
             currentIndex: policy
@@ -97,10 +98,10 @@ QQC2.ItemDelegate {
             id: valueEditor
             Layout.preferredWidth: 12 * Kirigami.Units.gridUnit
             Layout.alignment: Qt.AlignRight
-            enabled: model.enabled //&& !editMode //&& model.policy > 0
-            //visible: !editMode
+            enabled: itemIsEnabled // && model.policy > 0 (or 1)
 
-            modelValue: model.value
+            ruleValue: model.value
+            ruleOptions: model.options
             controlType: model.type
 
             onValueEdited: (value) => {

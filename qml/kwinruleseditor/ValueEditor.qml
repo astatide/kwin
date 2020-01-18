@@ -27,7 +27,8 @@ Loader {
     id: valueEditor
     focus: true
 
-    property var modelValue
+    property var ruleValue
+    property var ruleOptions
     property int controlType
 
     signal valueEdited(var value)
@@ -60,7 +61,7 @@ Loader {
             }
             QQC2.Switch {
                 text: checked ? i18n("Yes") : i18n("No")
-                checked: modelValue
+                checked: ruleValue
                 onToggled: valueEditor.valueEdited(checked)
             }
         }
@@ -70,7 +71,7 @@ Loader {
         id: stringEditor
         QQC2.TextField {
             property bool isTextEdited: false
-            text: modelValue
+            text: ruleValue
             onTextEdited: { isTextEdited = true; }
             onEditingFinished: {
                 if (isTextEdited) { valueEditor.valueEdited(text); }
@@ -83,7 +84,7 @@ Loader {
         id: integerEditor
         QQC2.SpinBox {
             editable: true
-            value: modelValue
+            value: ruleValue
             onValueModified: valueEditor.valueEdited(value)
         }
     }
@@ -92,8 +93,14 @@ Loader {
         id: optionEditor
         QQC2.ComboBox {
             flat: true
-            model: options
-            onActivated: valueEditor.valueEdited(currentText)
+            model: ruleOptions
+            textRole: "text"
+            currentIndex: model.selectedIndex
+            onActivated: { model.selectedIndex = currentIndex; }
+            //FIXME: After Qt 5.14
+            //valueRole: "value"
+            //currentValue: modelValue
+            //onActivated: valueEditor.valueEdited(currentValue)
         }
     }
 
@@ -105,16 +112,16 @@ Loader {
             spacing: 0
             Repeater {
                 id: flagsRepeater
-                model: options
+                model: ruleOptions
                 QQC2.ToolButton {
-                    property int bit: index
+                    property int bit: model.value
                     icon.name: "window-duplicate"
                     checkable: true
-                    checked: ((modelValue & (1 << bit)) >> bit) == 1
-                    QQC2.ToolTip.text: modelData
+                    checked: ((ruleValue & (1 << bit)) >> bit) == 1
+                    QQC2.ToolTip.text: model.text
                     QQC2.ToolTip.visible: hovered
                     onToggled: {
-                        valueEditor.valueEdited((modelValue & ~(1 << bit)) | (checked << bit));
+                        valueEditor.valueEdited((ruleValue & ~(1 << bit)) | (checked << bit));
                     }
                 }
             }
@@ -129,7 +136,7 @@ Loader {
                 Layout.fillWidth: true
                 from: 0
                 to: 100
-                value: modelValue
+                value: ruleValue
                 onMoved: valueEditor.valueEdited(Math.round(slider.value))
             }
             QQC2.Label {
@@ -142,7 +149,7 @@ Loader {
     Component {
         id: coordinateEditor
         RowLayout {
-            property var coords: modelValue ? modelValue.split(',') : [0, 0]
+            property var coords: ruleValue ? ruleValue.split(',') : [0, 0]
 
             QQC2.SpinBox {
                 id: coord_x
@@ -172,7 +179,7 @@ Loader {
         id: shortcutEditor
         QQC2.Button {
             icon.name: "key-enter"
-            text: modelValue ? modelValue : i18n("Set shortcut ...")
+            text: ruleValue ? ruleValue : i18n("Set shortcut ...")
         }
     }
 }

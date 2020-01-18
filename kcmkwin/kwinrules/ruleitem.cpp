@@ -124,17 +124,24 @@ RuleType RuleItem::type() const
 
 QVariant RuleItem::value() const
 {
+    if (d->m_type == Option) {
+        return o->value();
+    }
     return d->m_value;
 }
 
 void RuleItem::setValue(QVariant value)
 {
-    d->m_value = typedValue(value, d->m_type);
+    if (d->m_type == Option) {
+        o->setValue(value);
+    } else {
+        d->m_value = typedValue(value, d->m_type);
+    }
 }
 
-QStringList RuleItem::options() const
+QVariant RuleItem::options() const
 {
-    return o->descriptionList();
+    return QVariant::fromValue(o);
 }
 
 int RuleItem::policy() const
@@ -149,12 +156,12 @@ void RuleItem::setPolicy(int policy)
 
 int RuleItem::policyIndex() const
 {
-    return p->index();
+    return p->selectedIndex();
 }
 
 void RuleItem::setPolicyIndex(int policyIndex)
 {
-    p->setIndex(policyIndex);
+    p->setSelectedIndex(policyIndex);
 }
 
 RulePolicy::Type RuleItem::policyType() const
@@ -162,9 +169,10 @@ RulePolicy::Type RuleItem::policyType() const
     return p->type();
 }
 
-QStringList RuleItem::policyModel() const
+QVariant RuleItem::policyModel() const
 {
-    return p->descriptionList();
+    return p->displayList();
+    //return QVariant::fromValue(p);
 }
 
 QString RuleItem::policyKey() const
@@ -184,7 +192,7 @@ QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
         case Integer:
             return value.toInt();
         case Option:
-            return value.toString();
+            return value;
         case FlagsOption:
             return value.toUInt();
         case Percentage:
@@ -201,16 +209,57 @@ QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
     return value;
 }
 
+QHash<int, QByteArray> OptionsModel::roleNames() const
+{
+    return {
+        {Qt::DisplayRole,    QByteArrayLiteral("text")},
+        {Qt::UserRole,       QByteArrayLiteral("value")},
+        {Qt::DecorationRole, QByteArrayLiteral("iconName")},
+        {Qt::ToolTipRole,    QByteArrayLiteral("description")},
+    };
+}
 
-int OptionsModel::index() const
+int OptionsModel::rowCount(const QModelIndex &parent) const
+{
+    if (parent.isValid()) {
+        return 0;
+    }
+    return m_data.size();
+}
+
+QVariant OptionsModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid() || index.column() != 0 || index.row() < 0 || index.row() >= int(m_data.size())) {
+        return QVariant();
+    }
+
+    const Data data = m_data.at(index.row());
+
+    switch (role) {
+        case Qt::DisplayRole:
+            return data.text;
+        case Qt::UserRole:
+            return data.value;
+        case Qt::DecorationRole:
+            return data.iconName;
+        case Qt::ToolTipRole:
+            return data.description;
+    }
+    return QVariant();
+}
+
+int OptionsModel::selectedIndex() const
 {
     return m_index;
 }
 
-void OptionsModel::setIndex(int index)
+void OptionsModel::setSelectedIndex(int index)
 {
     Q_ASSERT (index >= 0 && index < m_data.count());
-    m_index = index;
+    if (m_index != index) {
+        m_index = index;
+        emit selectedIndexChanged(index);
+    }
 }
 
 QVariant OptionsModel::value() const
@@ -222,12 +271,12 @@ void OptionsModel::setValue(QVariant value)
 {
     for (int index = 0; index < m_data.count(); index++) {
         if (m_data.at(index).value == value) {
-            m_index = index;
+            setSelectedIndex(index);
         }
     }
 }
 
-QStringList OptionsModel::descriptionList() const
+QStringList OptionsModel::displayList() const
 {
     QStringList descList;
     for (const Data &item : m_data) {
