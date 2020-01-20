@@ -696,7 +696,6 @@ QList<OptionsModel::Data> RulesModel::focusModel() const
     };
 }
 
-//TODO: When full model is implemented, return the color scheme model directly
 QList<OptionsModel::Data> RulesModel::colorSchemesModel() const
 {
     QList<OptionsModel::Data> modelData;
@@ -705,8 +704,10 @@ QList<OptionsModel::Data> RulesModel::colorSchemesModel() const
     QAbstractItemModel *schemesModel = schemes->model();
 
     for (int r = 0; r < schemesModel->rowCount(); r++) {
-        auto schemeInfo = schemesModel->itemData(schemesModel->index(r, 0));
-        modelData << OptionsModel::Data{ schemeInfo[Qt::UserRole], schemeInfo[Qt::DisplayRole].toString() };
+        QModelIndex index = schemesModel->index(r, 0);
+        const QString fileName = QFileInfo(schemesModel->data(index, Qt::UserRole).toString()).baseName();
+        const QString name = schemesModel->data(index, Qt::DisplayRole).toString();
+        modelData << OptionsModel::Data{ fileName, name };
     }
 
     delete schemes;
