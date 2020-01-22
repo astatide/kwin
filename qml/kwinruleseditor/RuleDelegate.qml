@@ -101,7 +101,7 @@ QQC2.ItemDelegate {
 
         ValueEditor {
             id: valueEditor
-            Layout.preferredWidth: 12 * Kirigami.Units.gridUnit
+            Layout.preferredWidth: (policyCombo.visible ? 12 : 20 ) * Kirigami.Units.gridUnit
             Layout.alignment: Qt.AlignRight
             enabled: itemIsEnabled // && model.policy > 0 (or 1)
 
@@ -116,36 +116,11 @@ QQC2.ItemDelegate {
         }
 
         // FIXME: to reserve space behind the scrollbar.
-        // This will probably be solved in Kirigami's scrollbar
+        // This will probably be solved soon in Kirigami's scrollbar
         Item {
             id: scrollBarPadder
             visible: true
             width: Kirigami.Units.gridUnit
         }
-
-        /* Old attemps on controls for the delegate
-
-         QQC2.ToolButton {
-         icon.name: !(editMode && hovered) ? model.iconName :
-                             model.enabled ? 'list-remove'
-                                           : 'list-add-symbolic'
-            checkable: editMode
-
-            QQC2.ToolTip.text: model.description
-            QQC2.ToolTip.visible: (down || hovered) && (model.description != "")
-        }
-
-         QQC2.ToolButton {
-            id: descriptionButton
-            icon.name: "documentinfo"
-            Layout.fillHeight: true
-            Layout.alignment: Qt.AlignVCenter
-            width: height
-
-            visible: (model.description != "")
-            QQC2.ToolTip.text: model.description
-            QQC2.ToolTip.visible: down || hovered && (model.description != "")
-        }
-        */
     }
 }

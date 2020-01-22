@@ -72,8 +72,9 @@ public:
 class OptionsModel : public QAbstractListModel
 {
     Q_OBJECT
-
-    Q_PROPERTY(int selectedIndex READ selectedIndex WRITE setSelectedIndex NOTIFY selectedIndexChanged)
+    //FIXME: After Qt 5.14 the QML ComboBox will allow to use the valueRole directly
+    //       instead of changing the index. Remove this exposed property
+    Q_PROPERTY(int selectedIndex READ selectedIndex WRITE setSelectedIndex NOTIFY valueChanged)
 
 public:
     struct Data {
@@ -85,25 +86,28 @@ public:
 
 public:
     OptionsModel() : QAbstractListModel(), m_data(), m_index(0) {};
-    OptionsModel(QList<Data> data) : QAbstractListModel(), m_data(data), m_index(0) {};
+    OptionsModel(const QList<Data> &data) : QAbstractListModel(), m_data(data), m_index(0) {};
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QHash<int, QByteArray> roleNames() const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-    QStringList displayList() const;
-
     QVariant value() const;
     void setValue(QVariant value);
 
+    //FIXME: Make private or remove after Qt 5.14
     int selectedIndex() const;
     void setSelectedIndex(int index);
 
+    void updateModelData(const QList<Data> &data);
+
 signals:
-    void selectedIndexChanged(int index);
+    void valueChanged(int index);
+
+public:
+    QList<Data> m_data;
 
 protected:
-    QList<Data> m_data;
     int m_index = 0;
 };
 

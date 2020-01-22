@@ -42,9 +42,11 @@ RuleItem::RuleItem(const QString &key,
     d->m_type = type;
     setValue(QVariant());
 
-    //FIXME: After Qt 5.14
-    connect(p, &OptionsModel::selectedIndexChanged, this, &RuleItem::policyChanged);
-    connect(o, &OptionsModel::selectedIndexChanged, this, &RuleItem::valueChanged);
+    connect(o, &OptionsModel::valueChanged, this, [this] { d->m_value = o->value(); });
+    //FIXME: After Qt 5.14 the QML ComboBox will allow to use `setValue()` and `setPolicy()` directly.
+    //       No need to raise this signal.
+    connect(o, &OptionsModel::valueChanged, this, &RuleItem::valueChanged);
+    connect(p, &OptionsModel::valueChanged, this, &RuleItem::policyChanged);
 }
 
 RuleItem::~RuleItem()
@@ -96,7 +98,6 @@ void RuleItem::setDescription(const QString& description)
     d->m_description = description;
 }
 
-
 bool RuleItem::isEnabled() const
 {
     return d->m_enabled;
@@ -138,14 +139,23 @@ void RuleItem::setValue(QVariant value)
 {
     if (d->m_type == Option) {
         o->setValue(value);
-    } else {
-        d->m_value = typedValue(value, d->m_type);
     }
+
+    d->m_value = typedValue(value, d->m_type);
 }
 
 QVariant RuleItem::options() const
 {
+    if (d->m_type != Option && d->m_type != FlagsOption) {
+        return QVariant();
+    }
     return QVariant::fromValue(o);
+}
+
+void RuleItem::setOptionsData(const QList<OptionsModel::Data> &data)
+{
+    o->updateModelData(data);
+    o->setValue(d->m_value);
 }
 
 int RuleItem::policy() const
@@ -251,7 +261,7 @@ void OptionsModel::setSelectedIndex(int index)
     Q_ASSERT (index >= 0 && index < m_data.count());
     if (m_index != index) {
         m_index = index;
-        emit selectedIndexChanged(index);
+        emit valueChanged(index);
     }
 }
 
@@ -269,15 +279,11 @@ void OptionsModel::setValue(QVariant value)
     }
 }
 
-QStringList OptionsModel::displayList() const
-{
-    QStringList descList;
-    for (const Data &item : m_data) {
-        descList << item.text;
-    }
-    return descList;
+void OptionsModel::updateModelData(const QList<Data> &data) {
+    beginResetModel();
+    m_data = data;
+    endResetModel();
 }
-
 
 RulePolicy::Type RulePolicy::type() const
 {

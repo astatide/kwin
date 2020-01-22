@@ -26,10 +26,6 @@
 #include <QIcon>
 #include <QTemporaryFile>
 
-#ifdef KWIN_BUILD_ACTIVITIES
-#include <KActivities/Consumer>
-#endif
-
 #include <KColorSchemeManager>
 #include <KLocalizedString>
 #include <KWindowSystem>
@@ -138,9 +134,6 @@ bool RulesModel::setData(const QModelIndex & index, const QVariant & value, int 
     if (rule->hasFlag(RuleItem::AffectsWarning)) {
         emit showWarningChanged();
     }
-    if (rule->hasFlag(RuleItem::AffectsDescription)) {
-        emit defaultDescriptionChanged();
-    }
 
     return true;
 }
@@ -153,23 +146,17 @@ RuleItem *RulesModel::addRule(RuleItem *rule)
     return rule;
 }
 
-RuleItem *RulesModel::operator[](const QString& key) const
+bool RulesModel::hasRule(const QString& key) const
+{
+    return m_rules.contains(key);
+}
+
+
+RuleItem *RulesModel::ruleItem(const QString& key) const
 {
     return m_rules[key];
 }
 
-const QString RulesModel::description() const
-{
-    return m_description;
-}
-
-void RulesModel::setDescription(const QString& name)
-{
-    if (m_description != name) {
-        m_description = name;
-        emit descriptionChanged();
-    }
-}
 
 const QString RulesModel::defaultDescription() const
 {
@@ -183,7 +170,7 @@ const QString RulesModel::defaultDescription() const
         return i18n("Settings for %1", wmclass);
     }
 
-    return i18n("New specific window settings");
+    return i18n("New window settings");
 }
 
 bool RulesModel::isWarningShown()
@@ -200,29 +187,24 @@ bool RulesModel::isWarningShown()
 
 void RulesModel::init()
 {
-    setDescription(QString());
-
     beginResetModel();
+
     int row = 0;
     for (RuleItem *rule : qAsConst(m_ruleList)) {
         rule->reset();
-        //FIXME: After Qt 5.14, the QQC2.ComboBox allows to use the main model interface
-        //       Until then, we need to connect the internal models `selectedIndex`changes
-        //       to the external model
+
         const QModelIndex index = this->index(row, 0);
         connect(rule, &RuleItem::valueChanged,  this, [this, index](QVariant value){ setData(index, value, RulesModel::ValueRole); });
         connect(rule, &RuleItem::policyChanged, this, [this, index](QVariant policy){ setData(index, policy, RulesModel::PolicyRole); });
 
         row++;
     }
+
     endResetModel();
 }
 
 void RulesModel::readFromConfig(KConfigGroup *config)
 {
-    const QString desc = config->readEntry(QLatin1String("Description"));
-    setDescription(desc);
-
     beginResetModel();
     for (RuleItem *rule : qAsConst(m_ruleList)) {
         if (!config->hasKey(rule->key())) {
@@ -242,17 +224,13 @@ void RulesModel::readFromConfig(KConfigGroup *config)
     }
     endResetModel();
 
-    emit descriptionChanged();
-    emit defaultDescriptionChanged();
     emit showWarningChanged();
 }
 
 void RulesModel::writeToConfig(KConfigGroup *config) const
 {
-    if (!m_description.isEmpty()) {
-        config->writeEntry(QLatin1String("Description"), m_description);
-    } else {
-        config->writeEntry(QLatin1String("Description"), defaultDescription());
+    if (m_rules["Description"]->value().toString().isEmpty()) {
+        m_rules["Description"]->setValue(defaultDescription());
     }
 
     for (const RuleItem *rule : qAsConst(m_ruleList)) {
@@ -350,6 +328,13 @@ void RulesModel::initRuleList()
 {
     m_ruleList.clear();
 
+    //Rule description
+    addRule(new RuleItem(QLatin1String("Description"),
+                         RulePolicy::NoPolicy, RuleType::String,
+                         i18n("Description"), i18n("Window matching"),
+                         QStringLiteral("entry-edit")));
+    m_rules["Description"]->setFlags(RuleItem::AlwaysEnabled | RuleItem::AffectsDescription);
+
     // Window matching
     addRule(new RuleItem(QLatin1String("wmclass"),
                          RulePolicy::StringMatch, RuleType::String,
@@ -372,7 +357,7 @@ void RulesModel::initRuleList()
                          RulePolicy::NoPolicy, RuleType::FlagsOption,
                          i18n("Window types"), i18n("Window matching"),
                          QStringLiteral("window-duplicate"),
-                         windowTypesModel()));
+                         windowTypesModelData()));
     m_rules["types"]->setFlags(RuleItem::StartEnabled | RuleItem::AffectsWarning );
 
     addRule(new RuleItem(QLatin1String("title"),
@@ -411,14 +396,25 @@ void RulesModel::initRuleList()
                          RulePolicy::SetRule, RuleType::Option,
                          i18n("Virtual Desktop"), i18n("Size & Position"),
                          QStringLiteral("virtual-desktops"),
-                         virtualDesktopsModel()));
+                         virtualDesktopsModelData()));
+
 #ifdef KWIN_BUILD_ACTIVITIES
+    m_activities = new KActivities::Consumer(this);
+
     addRule(new RuleItem(QLatin1String("activity"),
                          RulePolicy::SetRule, RuleType::Option,
                          i18n("Activity"), i18n("Size & Position"),
                          QStringLiteral("activities"),
-                         activitiesModel()));
+                         activitiesModelData()));
+
+    // Activites consumer may update the available activities later
+    connect(m_activities, &KActivities::Consumer::activitiesChanged,
+            this, [this] { m_rules["activity"]->setOptionsData(activitiesModelData()); });
+    connect(m_activities, &KActivities::Consumer::serviceStatusChanged,
+            this, [this] { m_rules["activity"]->setOptionsData(activitiesModelData()); });
+
 #endif
+
     addRule(new RuleItem(QLatin1String("screen"),
                          RulePolicy::SetRule, RuleType::Integer,
                          i18n("Screen"), i18n("Size & Position"),
@@ -443,7 +439,7 @@ void RulesModel::initRuleList()
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Initial placement"), i18n("Size & Position"),
                          QStringLiteral("preferences-system-windows-effect-presentwindows"),
-                         placementModel()));
+                         placementModelData()));
 
     addRule(new RuleItem(QLatin1String("ignoregeometry"),
                          RulePolicy::SetRule, RuleType::Boolean,
@@ -518,7 +514,7 @@ void RulesModel::initRuleList()
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Titlebar color scheme"), i18n("Appearance & Fixes"),
                          QStringLiteral("preferences-desktop-theme"),
-                         colorSchemesModel()));
+                         colorSchemesModelData()));
 
     addRule(new RuleItem(QLatin1String("opacityactive"),
                          RulePolicy::ForceRule, RuleType::Percentage,
@@ -534,7 +530,7 @@ void RulesModel::initRuleList()
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Focus stealing prevention"), i18n("Appearance & Fixes"),
                          QStringLiteral("preferences-system-windows-effect-glide"),
-                         focusModel()));
+                         focusModelData()));
     m_rules["fsplevel"]->setDescription(i18n("KWin tries to prevent windows from taking the focus\n"
                                              "(\"activate\") while you're working in another window,\n"
                                              "but this may sometimes fail or superact.\n"
@@ -545,7 +541,7 @@ void RulesModel::initRuleList()
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Focus protection"), i18n("Appearance & Fixes"),
                          QStringLiteral("preferences-system-windows-effect-minimize"),
-                         focusModel()));
+                         focusModelData()));
     m_rules["fpplevel"]->setDescription(i18n("This controls the focus protection of the currently active window.\n"
                                              "None will always give the focus away,\n"
                                              "Extreme will keep it.\n"
@@ -582,7 +578,7 @@ void RulesModel::initRuleList()
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Set window type"), i18n("Appearance & Fixes"),
                          QStringLiteral("window-duplicate"),
-                         windowTypesModel()));
+                         windowTypesModelData()));
 
     addRule(new RuleItem(QLatin1String("desktopfile"),
                          RulePolicy::SetRule, RuleType::String,
@@ -618,7 +614,7 @@ void RulesModel::initPropertyMap()
     m_ruleForProperty.insert(QStringLiteral("desktopFile"), QStringLiteral("desktopfile"));
 }
 
-QList<OptionsModel::Data> RulesModel::windowTypesModel() const
+QList<OptionsModel::Data> RulesModel::windowTypesModelData() const
 {
     return {
         { NET::Normal,  i18n("Normal Window")      },
@@ -634,7 +630,7 @@ QList<OptionsModel::Data> RulesModel::windowTypesModel() const
     };
 }
 
-QList<OptionsModel::Data> RulesModel::virtualDesktopsModel() const
+QList<OptionsModel::Data> RulesModel::virtualDesktopsModelData() const
 {
     QList<OptionsModel::Data> modelData;
     for (int i = 1; i <= KWindowSystem::numberOfDesktops(); ++i) {
@@ -644,11 +640,10 @@ QList<OptionsModel::Data> RulesModel::virtualDesktopsModel() const
     return modelData;
 }
 
-#ifdef KWIN_BUILD_ACTIVITIES
 
-// TODO: If necesary, connect to consumer signals to update the activity model
-QList<OptionsModel::Data> RulesModel::activitiesModel() const
+QList<OptionsModel::Data> RulesModel::activitiesModelData() const
 {
+#ifdef KWIN_BUILD_ACTIVITIES
     QList<OptionsModel::Data> modelData;
 
     // cloned from kactivities/src/lib/core/consumer.cpp
@@ -656,9 +651,8 @@ QList<OptionsModel::Data> RulesModel::activitiesModel() const
     modelData << OptionsModel::Data{ QString::fromLatin1(NULL_UUID), i18n("All Activities") };
     #undef NULL_UUID
 
-    KActivities::Consumer *consumer = new KActivities::Consumer();
-    const auto activities = consumer->activities(KActivities::Info::Running);
-    if (consumer->serviceStatus() == KActivities::Consumer::Running) {
+    const auto activities = m_activities->activities(KActivities::Info::Running);
+    if (m_activities->serviceStatus() == KActivities::Consumer::Running) {
         for (const QString &activityId : activities) {
             const KActivities::Info info(activityId);
             modelData << OptionsModel::Data{ activityId, info.name() };
@@ -666,10 +660,12 @@ QList<OptionsModel::Data> RulesModel::activitiesModel() const
     }
 
     return modelData;
-}
+#else
+    return {};
 #endif
+}
 
-QList<OptionsModel::Data> RulesModel::placementModel() const
+QList<OptionsModel::Data> RulesModel::placementModelData() const
 {
     return {
         { Placement::Default,      i18n("Default")             },
@@ -685,7 +681,7 @@ QList<OptionsModel::Data> RulesModel::placementModel() const
     };
 }
 
-QList<OptionsModel::Data> RulesModel::focusModel() const
+QList<OptionsModel::Data> RulesModel::focusModelData() const
 {
     return {
         { 0, i18n("None")    },
@@ -696,7 +692,7 @@ QList<OptionsModel::Data> RulesModel::focusModel() const
     };
 }
 
-QList<OptionsModel::Data> RulesModel::colorSchemesModel() const
+QList<OptionsModel::Data> RulesModel::colorSchemesModelData() const
 {
     QList<OptionsModel::Data> modelData;
 

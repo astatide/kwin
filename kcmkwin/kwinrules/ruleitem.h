@@ -83,9 +83,9 @@ public:
 
     void reset();
 
-//FIXME: After Qt 5.14, the QQC2.ComboBox allows to use the main model interface
-//       Until then, we need to connect the internal models `selectedIndex`changes
-//       to the external model
+public slots:
+    void setOptionsData(const QList<OptionsModel::Data> &data);
+
 signals:
     void valueChanged(QVariant value);
     void policyChanged(int policy);

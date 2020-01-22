@@ -21,7 +21,10 @@
 import QtQuick 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12 as QQC2
+
 import org.kde.kirigami 2.10 as Kirigami
+import org.kde.kquickcontrols 2.0 as KQC
+
 
 Loader {
     id: valueEditor
@@ -180,9 +183,15 @@ Loader {
 
     Component {
         id: shortcutEditor
-        QQC2.Button {
-            icon.name: "key-enter"
-            text: ruleValue ? ruleValue : i18n("Set shortcut ...")
+        RowLayout {
+            Item {
+                Layout.fillWidth: true
+            }
+            KQC.KeySequenceItem {
+                //FIXME: KeySequenceItem.qml:14:5: QML KeySequenceHelper: Binding loop detected for property "keySequence"
+                keySequence: ruleValue
+                onKeySequenceChanged: valueEditor.valueEdited(keySequence)
+            }
         }
     }
 }

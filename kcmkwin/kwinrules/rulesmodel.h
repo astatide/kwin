@@ -27,7 +27,12 @@
 #include <QAbstractListModel>
 #include <QObject>
 
+#ifdef KWIN_BUILD_ACTIVITIES
+#include <KActivities/Consumer>
+#endif
+
 #include <KConfig>
+
 
 namespace KWin
 {
@@ -36,8 +41,6 @@ class RulesModel : public QAbstractListModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
-    Q_PROPERTY(QString defaultDescription READ defaultDescription NOTIFY defaultDescriptionChanged)
     Q_PROPERTY(bool showWarning READ isWarningShown NOTIFY showWarningChanged)
 
 public:
@@ -65,11 +68,8 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex & index, const QVariant & value, int role) override;
 
-    RuleItem *operator[](const QString &key) const;
-
-    const QString description() const;
-    void setDescription(const QString& name);
-    const QString defaultDescription() const;
+    bool hasRule(const QString &key) const;
+    RuleItem *ruleItem(const QString &key) const;
 
     void readFromConfig(KConfigGroup *config);
     void writeToConfig(KConfigGroup *config) const;
@@ -84,27 +84,29 @@ public slots:
     void init();
 
 signals:
-    void descriptionChanged();
-    void defaultDescriptionChanged();
     void showWarningChanged();
 
 private:
     void initRuleList();
     void initPropertyMap();
     RuleItem *addRule(RuleItem *rule);
+    const QString defaultDescription() const;
 
-    QList<OptionsModel::Data> windowTypesModel() const;
-    QList<OptionsModel::Data> virtualDesktopsModel() const;
-    QList<OptionsModel::Data> activitiesModel() const;
-    QList<OptionsModel::Data> placementModel() const;
-    QList<OptionsModel::Data> focusModel() const;
-    QList<OptionsModel::Data> colorSchemesModel() const;
+    QList<OptionsModel::Data> windowTypesModelData() const;
+    QList<OptionsModel::Data> virtualDesktopsModelData() const;
+    QList<OptionsModel::Data> activitiesModelData() const;
+    QList<OptionsModel::Data> placementModelData() const;
+    QList<OptionsModel::Data> focusModelData() const;
+    QList<OptionsModel::Data> colorSchemesModelData() const;
 
 private:
     QList<RuleItem *> m_ruleList;
     QHash<QString, RuleItem *> m_rules;
-    QString m_description;
+
     QHash<QString, QString> m_ruleForProperty;
+#ifdef KWIN_BUILD_ACTIVITIES
+    KActivities::Consumer *m_activities;
+#endif
 };
 
 }

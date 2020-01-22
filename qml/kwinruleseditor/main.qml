@@ -26,24 +26,17 @@ import org.kde.kirigami 2.10 as Kirigami
 ColumnLayout {
 
     RowLayout {
-        Kirigami.Heading {
-            text: i18n("Rule description:")
-            level: 3
-        }
-
+        id: filterBar
         QQC2.TextField {
-            property bool isTextEdited: false
-            text: rules.description
-            placeholderText: rules.defaultDescription
-            onTextEdited: { isTextEdited = true; }
-            onEditingFinished: {
-                if (isTextEdited) {
-                    print ("Rule Name changed to: " + text)
-                    rules.description = text;
-                }
-                isTextEdited = false;
-            }
+            id: searchBar
             Layout.fillWidth: true
+            placeholderText: i18n("Search...")
+        }
+        QQC2.ToolButton {
+            id: editModeButton
+            icon.name: checked ? 'view-visible' : 'view-hidden'
+            checkable: true
+            text: i18n("Show all rules")
         }
     }
 
@@ -68,21 +61,6 @@ ColumnLayout {
                 }
             }
         }
-    }
-
-    RowLayout {
-        id: viewActionBar
-            QQC2.TextField {
-                id: searchBar
-                Layout.fillWidth: true
-                placeholderText: i18n("Filter...")
-            }
-            QQC2.ToolButton {
-                id: editModeButton
-                icon.name: checked ? 'view-visible' : 'view-hidden'
-                checkable: true
-                text: i18n("Show all rules")
-            }
     }
 
     // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
