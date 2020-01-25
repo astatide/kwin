@@ -37,16 +37,22 @@ RuleItem::RuleItem(const QString &key,
                   )
     : d(new RuleItemPrivate(key, name, section, iconName))
     , p(new RulePolicy(policyType))
-    , o(new OptionsModel(options))
+    , o(nullptr)
 {
     d->m_type = type;
+    if (type == Option || type == FlagsOption) {
+        o = new OptionsModel(options);
+        connect(o, &OptionsModel::valueChanged, this, [this] { d->m_value = o->value(); });
+    }
+
     setValue(QVariant());
 
-    connect(o, &OptionsModel::valueChanged, this, [this] { d->m_value = o->value(); });
     //FIXME: After Qt 5.14 the QML ComboBox will allow to use `setValue()` and `setPolicy()` directly.
     //       No need to raise this signal.
-    connect(o, &OptionsModel::valueChanged, this, &RuleItem::valueChanged);
     connect(p, &OptionsModel::valueChanged, this, &RuleItem::policyChanged);
+    if (o) {
+        connect(o, &OptionsModel::valueChanged, this, &RuleItem::valueChanged);
+    }
 }
 
 RuleItem::~RuleItem()
@@ -146,7 +152,7 @@ void RuleItem::setValue(QVariant value)
 
 QVariant RuleItem::options() const
 {
-    if (d->m_type != Option && d->m_type != FlagsOption) {
+    if (!o) {
         return QVariant();
     }
     return QVariant::fromValue(o);
@@ -154,6 +160,12 @@ QVariant RuleItem::options() const
 
 void RuleItem::setOptionsData(const QList<OptionsModel::Data> &data)
 {
+    if (!o) {
+        if (d->m_type != Option && d->m_type != FlagsOption) {
+            return;
+        }
+        o = new OptionsModel();
+    }
     o->updateModelData(data);
     o->setValue(d->m_value);
 }
