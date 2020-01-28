@@ -64,8 +64,6 @@ QQC2.ItemDelegate {
             checked: model.enabled
             onToggled: { model.enabled = checked; }
         }
-
-
 /*
         Kirigami.Icon {
             source: model.icon
@@ -85,7 +83,7 @@ QQC2.ItemDelegate {
 
         QQC2.ComboBox {
             id: policyCombo
-            Layout.preferredWidth: 8 * Kirigami.Units.gridUnit
+            Layout.preferredWidth: 9 * Kirigami.Units.gridUnit
             flat: true
 
             visible: count > 0
@@ -106,7 +104,8 @@ QQC2.ItemDelegate {
 
         ValueEditor {
             id: valueEditor
-            Layout.preferredWidth: (policyCombo.visible ? 12 : 20 ) * Kirigami.Units.gridUnit
+            Layout.preferredWidth: policyCombo.visible ? 11 * Kirigami.Units.gridUnit
+                                                       : 20 * Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
             Layout.alignment: Qt.AlignRight
             enabled: itemIsEnabled // && model.policy > 0 (or 1)
 

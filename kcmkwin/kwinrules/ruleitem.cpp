@@ -344,7 +344,7 @@ QList<RulePolicy::Data> RulePolicy::policyOptions(RulePolicy::Type type)
             {Rules::UnimportantMatch, i18n("Unimportant")},
             {Rules::ExactMatch,       i18n("Exact Match")},
             {Rules::SubstringMatch,   i18n("Substring Match")},
-            {Rules::RegExpMatch,      i18n("Regular Expresion")}
+            {Rules::RegExpMatch,      i18n("Regular Expression")}
         };
     case SetRule:
         return {
