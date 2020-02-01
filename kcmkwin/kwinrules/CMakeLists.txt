@@ -67,23 +67,26 @@ install(TARGETS kcm_kwinrules DESTINATION ${PLUGIN_INSTALL_DIR})
 ########### next target ###############
 
 set(kcmkwinrules_qml_SRCS
-    kcm_qml.cpp
+    kcmrules.cpp
 )
 
 add_library(kcm_kwinrules_qml MODULE ${kcmkwinrules_qml_SRCS})
 
 target_link_libraries(kcm_kwinrules_qml
+    Qt5::Quick
+
     KF5::I18n
+    KF5::ConfigWidgets
     KF5::CoreAddons
     KF5::QuickAddons
-    Qt5::Quick
+    KF5::WindowSystem
 )
 
-kcoreaddons_desktop_to_json(kcm_kwinrules_qml "kwinrules_qml.desktop" SERVICE_TYPES kcmodule.desktop)
+kcoreaddons_desktop_to_json(kcm_kwinrules_qml "kcm_kwinrules_qml.desktop" SERVICE_TYPES kcmodule.desktop)
 
 # This desktop file is installed only for retrocompatibility with sycoca
-install(FILES kwinrules_qml.desktop DESTINATION ${KDE_INSTALL_KSERVICES5DIR})
 install(TARGETS kcm_kwinrules_qml DESTINATION ${KDE_INSTALL_PLUGINDIR}/kcms)
+install(FILES kcm_kwinrules_qml.desktop DESTINATION ${KDE_INSTALL_KSERVICES5DIR})
 
 kpackage_install_package(package kcm_kwinrules_qml kcms)
 

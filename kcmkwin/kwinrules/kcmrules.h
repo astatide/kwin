@@ -18,21 +18,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12 as QQC2
-import org.kde.kcm 1.2
+#pragma once
 
-ScrollViewKCM {
+#include <rules.h>
 
-    ConfigModule.buttons: ConfigModule.Help | ConfigModule.Apply
+#include <QStringListModel>
 
-    view: ListView {
-        id: ruleListView
-        model: kcm.rulesListModel
-        delegate: QQC2.ItemDelegate {
-            text: model.display
-            width: parent.width
-            height: 25
-        }
-    }
-}
+#include <KConfig>
+#include <KQuickAddons/ConfigModule>
+
+class QAbstractItemModel;
+class QQuickItem;
+
+namespace KWin
+{
+
+class KCMKWinRules : public KQuickAddons::ConfigModule
+{
+    Q_OBJECT
+
+    Q_PROPERTY(QStringListModel *rulesListModel READ rulesListModel CONSTANT)
+
+public:
+    explicit KCMKWinRules(QObject *parent, const QVariantList &arguments);
+    ~KCMKWinRules();
+
+public:
+    QStringListModel *rulesListModel() const;
+
+public slots:
+    void load() override;
+    void save() override;
+
+private:
+    KConfig *m_rulesConfig;
+    QStringListModel *m_rulesListModel;
+    //QList<KWin::Rules *> m_rulesList;
+
+};
+
+} // namespace

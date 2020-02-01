@@ -1,10 +1,9 @@
 [Desktop Entry]
-Icon=preferences-system-windows-actions
-
 Exec=kcmshell5 kwinrules_qml
-
+Icon=preferences-system-windows-actions
 Categories=Qt;KDE;X-KDE-settings-looknfeel;
 Type=Service
+
 X-KDE-ServiceTypes=KCModule
 X-KDE-Library=kcm_kwinrules_qml
 X-KDE-ParentApp=kcontrol
