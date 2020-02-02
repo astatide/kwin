@@ -18,8 +18,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KWIN_RULEITEM_P_H
-#define KWIN_RULEITEM_P_H
+#ifndef KWIN_OPTIONS_MODEL_H
+#define KWIN_OPTIONS_MODEL_H
+
+#include <rules.h>
 
 #include <QAbstractListModel>
 #include <QIcon>
@@ -27,50 +29,6 @@
 
 
 namespace KWin {
-
-enum RuleType {
-    Undefined,
-    Boolean,
-    String,
-    Integer,
-    Option,
-    FlagsOption,
-    Percentage,
-    Coordinate,
-    Shortcut
-};
-
-class RuleItemPrivate
-{
-public:
-    RuleItemPrivate();
-    RuleItemPrivate(const QString &key,
-                    const QString &name,
-                    const QString &section,
-                    const QString &iconName)
-        : m_key(key)
-        , m_name(name)
-        , m_section(section)
-        , m_icon(QIcon::fromTheme(iconName))
-        , m_enabled(false)
-        , m_flags(0)
-        {};
-
-public:
-    QString m_key;
-    QString m_name;
-    QString m_section;
-    QIcon m_icon;
-
-    bool m_enabled;
-
-    QString m_description;
-    uint m_flags;
-
-    RuleType m_type;
-    QVariant m_value;
-};
-
 
 class OptionsModel : public QAbstractListModel
 {
@@ -154,4 +112,4 @@ private:
 
 }   //namespace
 
-#endif  //KWIN_RULEITEM_P_H
+#endif  //KWIN_OPTIONS_MODEL_H

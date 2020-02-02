@@ -9,6 +9,7 @@ set(kwinrules_MOC_HDRS yesnobox.h ../../cursor.h ../../plugins/platforms/x11/sta
 qt5_wrap_cpp(kwinrules_MOC_SRCS ${kwinrules_MOC_HDRS})
 set(kwinrules_SRCS
     ruleswidget.cpp
+    optionsmodel.cpp
     ruleitem.cpp
     rulesmodel.cpp
     rulesdialog.cpp

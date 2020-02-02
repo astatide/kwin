@@ -19,12 +19,39 @@
  */
 
 #include "ruleitem.h"
-#include <rules.h>
 
 #include <KLocalizedString>
 
 
-using namespace KWin;
+namespace KWin
+{
+
+class RuleItemPrivate
+{
+public:
+    RuleItemPrivate(const QString &key, const QString &name, const QString &section, const QString &iconName)
+    : m_key(key)
+    , m_name(name)
+    , m_section(section)
+    , m_icon(QIcon::fromTheme(iconName))
+    , m_enabled(false)
+    , m_flags(0)
+    {};
+
+public:
+    QString m_key;
+    QString m_name;
+    QString m_section;
+    QIcon m_icon;
+
+    bool m_enabled;
+
+    QString m_description;
+    uint m_flags;
+
+    RuleType m_type;
+    QVariant m_value;
+};
 
 
 RuleItem::RuleItem(const QString &key,
@@ -223,144 +250,5 @@ QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
     return value;
 }
 
-QHash<int, QByteArray> OptionsModel::roleNames() const
-{
-    return {
-        {Qt::DisplayRole,    QByteArrayLiteral("text")},
-        {Qt::UserRole,       QByteArrayLiteral("value")},
-        {Qt::DecorationRole, QByteArrayLiteral("icon")},
-        {Qt::ToolTipRole,    QByteArrayLiteral("description")},
-        {Qt::UserRole + 1,   QByteArrayLiteral("iconName")},
-    };
-}
+}   //namespace
 
-int OptionsModel::rowCount(const QModelIndex &parent) const
-{
-    if (parent.isValid()) {
-        return 0;
-    }
-    return m_data.size();
-}
-
-QVariant OptionsModel::data(const QModelIndex &index, int role) const
-{
-    if (!index.isValid() || index.column() != 0 || index.row() < 0 || index.row() >= int(m_data.size())) {
-        return QVariant();
-    }
-
-    const Data data = m_data.at(index.row());
-
-    switch (role) {
-        case Qt::DisplayRole:
-            return data.text;
-        case Qt::UserRole:
-            return data.value;
-        case Qt::DecorationRole:
-            return data.icon;
-        case Qt::UserRole + 1:
-            return data.icon.name();
-        case Qt::ToolTipRole:
-            return data.description;
-    }
-    return QVariant();
-}
-
-int OptionsModel::selectedIndex() const
-{
-    return m_index;
-}
-
-void OptionsModel::setSelectedIndex(int index)
-{
-    Q_ASSERT (index >= 0 && index < m_data.count());
-    if (m_index != index) {
-        m_index = index;
-        emit valueChanged(value());
-    }
-}
-
-QVariant OptionsModel::value() const
-{
-    if (m_data.isEmpty()) {
-        return QVariant();
-    }
-    return m_data.at(m_index).value;
-}
-
-void OptionsModel::setValue(QVariant value)
-{
-    if (this->value() == value) {
-        return;
-    }
-    for (int index = 0; index < m_data.count(); index++) {
-        if (m_data.at(index).value == value) {
-            setSelectedIndex(index);
-            break;
-        }
-    }
-}
-
-void OptionsModel::updateModelData(const QList<Data> &data) {
-    beginResetModel();
-    m_data = data;
-    endResetModel();
-}
-
-RulePolicy::Type RulePolicy::type() const
-{
-    return m_type;
-}
-
-int RulePolicy::value() const
-{
-    if (m_type == RulePolicy::NoPolicy) {
-        return Rules::Apply;   // To simplify external checks when rule has no policy
-    }
-    return OptionsModel::value().toInt();
-}
-
-QString RulePolicy::policyKey(const QString &key) const
-{
-    switch (m_type) {
-        case NoPolicy:
-            return QString();
-        case StringMatch:
-            return QStringLiteral("%1match").arg(key);
-        case SetRule:
-        case ForceRule:
-            return QStringLiteral("%1rule").arg(key);
-    }
-
-    return QString();
-}
-
-QList<RulePolicy::Data> RulePolicy::policyOptions(RulePolicy::Type type)
-{
-    switch (type) {
-    case NoPolicy:
-        return {};
-    case StringMatch:
-        return {
-            {Rules::UnimportantMatch, i18n("Unimportant")},
-            {Rules::ExactMatch,       i18n("Exact Match")},
-            {Rules::SubstringMatch,   i18n("Substring Match")},
-            {Rules::RegExpMatch,      i18n("Regular Expression")}
-        };
-    case SetRule:
-        return {
-            {Rules::DontAffect,       i18n("Do Not Affect")},
-            {Rules::Apply,            i18n("Apply Initially")},
-            {Rules::Remember,         i18n("Remember")},
-            {Rules::Force,            i18n("Force")},
-            {Rules::ApplyNow,         i18n("Apply Now")},
-            {Rules::ForceTemporarily, i18n("Force Temporarily")},
-        };
-    case ForceRule:
-        return {
-            {Rules::DontAffect,       i18n("Do Not Affect")},
-            {Rules::Force,            i18n("Force")},
-            {Rules::ForceTemporarily, i18n("Force Temporarily")},
-        };
-    }
-    return {};
-}

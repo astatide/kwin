@@ -21,13 +21,27 @@
 #ifndef KWIN_RULEITEM_H
 #define KWIN_RULEITEM_H
 
-#include "ruleitem_p.h"
+#include "optionsmodel.h"
 
 #include <QIcon>
 
 
 namespace KWin
 {
+
+enum RuleType {
+    Undefined,
+    Boolean,
+    String,
+    Integer,
+    Option,
+    FlagsOption,
+    Percentage,
+    Coordinate,
+    Shortcut
+};
+
+class RuleItemPrivate;
 
 class RuleItem : public QObject
 {
