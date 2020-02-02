@@ -27,10 +27,23 @@ ColumnLayout {
 
     RowLayout {
         id: filterBar
-        QQC2.TextField {
-            id: searchBar
+        Kirigami.ActionTextField {
+            id: searchField
+
             Layout.fillWidth: true
             placeholderText: i18n("Search...")
+            focusSequence: "Ctrl+F"
+
+            rightActions: [
+                Kirigami.Action {
+                    iconName: "edit-clear"
+                    visible: searchField.text !== ""
+                    onTriggered: {
+                        searchField.text = ""
+                        searchField.accepted()
+                    }
+                }
+            ]
         }
         QQC2.ToolButton {
             id: showAllButton
