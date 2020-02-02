@@ -19,8 +19,10 @@
  */
 
 import QtQuick 2.12
+import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12 as QQC2
 import org.kde.kcm 1.2
+import org.kde.kirigami 2.5 as Kirigami
 
 ScrollViewKCM {
 
@@ -29,10 +31,29 @@ ScrollViewKCM {
     view: ListView {
         id: ruleListView
         model: kcm.rulesListModel
-        delegate: QQC2.ItemDelegate {
-            text: model.display
+        delegate: Kirigami.AbstractListItem {
+            id: ruleListItem
+
             width: parent.width
-            height: 25
+            //height: 2 * Kirigami.Units.gridUnit
+            focus: true
+
+            highlighted: ListView.isCurrentItem
+            onClicked: ruleListView.currentIndex = index
+
+            RowLayout {
+                QQC2.Label {
+                    text: modelData
+                    Layout.fillWidth: true
+                }
+
+                Kirigami.Action {
+                    iconName: "edit"
+                    onTriggered: {
+                        kcm.editRule(index)
+                    }
+                }
+            }
         }
     }
 }

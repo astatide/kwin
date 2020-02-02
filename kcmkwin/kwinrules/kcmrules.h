@@ -37,22 +37,25 @@ class KCMKWinRules : public KQuickAddons::ConfigModule
 {
     Q_OBJECT
 
-    Q_PROPERTY(QStringListModel *rulesListModel READ rulesListModel CONSTANT)
+    Q_PROPERTY(QStringList rulesListModel READ rulesListModel NOTIFY rulesListModelChanged)
 
 public:
     explicit KCMKWinRules(QObject *parent, const QVariantList &arguments);
     ~KCMKWinRules();
 
 public:
-    QStringListModel *rulesListModel() const;
+    QStringList rulesListModel() const;
 
 public slots:
     void load() override;
     void save() override;
 
+signals:
+    void rulesListModelChanged();
+
 private:
     KConfig *m_rulesConfig;
-    QStringListModel *m_rulesListModel;
+    QStringList m_rulesListModel;
     //QList<KWin::Rules *> m_rulesList;
 
 };

@@ -45,7 +45,6 @@ namespace KWin
 KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
     : KQuickAddons::ConfigModule(parent, arguments)
     , m_rulesConfig(new KConfig(s_configFile))
-    , m_rulesListModel(new QStringListModel())
 {
     auto about = new KAboutData(QStringLiteral("kcm_kwinrules_qml"),
                                 i18n("Window Rules"),
@@ -66,19 +65,16 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
 
 KCMKWinRules::~KCMKWinRules() {
     delete m_rulesConfig;
-    delete m_rulesListModel;
 }
 
-QStringListModel *KCMKWinRules::rulesListModel() const
+QStringList KCMKWinRules::rulesListModel() const
 {
     return m_rulesListModel;
 }
 
 void KCMKWinRules::load()
 {
-    QStringList rulesDescriptionList;
-
-    //m_rulesList.clear();
+    m_rulesListModel.clear();
 
     KConfigGroup cfg(m_rulesConfig, "General");
     int rulesCount = cfg.readEntry("count", 0);
@@ -87,14 +83,14 @@ void KCMKWinRules::load()
         cfg = KConfigGroup(m_rulesConfig, QString::number(i));
 
         const QString ruleDescription = cfg.readEntry("Description");
-        rulesDescriptionList << ruleDescription;
+        m_rulesListModel.append(ruleDescription);
         //qDebug() << ruleDescription;
 
         //KWin::Rules *rule = new KWin::Rules(cfg);
         //m_rulesList << rule;
     }
 
-    m_rulesListModel->setStringList(rulesDescriptionList);
+    emit rulesListModelChanged();
 }
 
 void KCMKWinRules::save()
