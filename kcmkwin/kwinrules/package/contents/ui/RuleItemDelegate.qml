@@ -57,6 +57,7 @@ QQC2.ItemDelegate {
         anchors {
             left: parent.left
             right: parent.right
+            margins: Kirigami.Units.smallSpacing
         }
 
         QQC2.CheckBox {
@@ -117,14 +118,6 @@ QQC2.ItemDelegate {
                 print ("Rule changed: " + model.key + " = " + value)
                 model.value = value
             }
-        }
-
-        // FIXME: to reserve space behind the scrollbar.
-        // This will probably be solved soon in Kirigami's scrollbar
-        Item {
-            id: scrollBarPadder
-            visible: true
-            width: Kirigami.Units.gridUnit
         }
     }
 }

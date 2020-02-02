@@ -49,6 +49,7 @@ public:
 public slots:
     void load() override;
     void save() override;
+    void move(int sourceRow, int destRow);
 
 signals:
     void rulesListModelChanged();

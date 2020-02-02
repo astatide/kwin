@@ -22,10 +22,12 @@ import QtQuick 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12 as QQC2
 import org.kde.kirigami 2.10 as Kirigami
+import org.kde.kcm 1.2
 
-ColumnLayout {
 
-    RowLayout {
+ScrollViewKCM {
+
+    header: RowLayout {
         id: filterBar
         Kirigami.ActionTextField {
             id: searchField
@@ -53,38 +55,36 @@ ColumnLayout {
         }
     }
 
-    QQC2.Frame {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.margins: 0
-
-        QQC2.ScrollView {
-            anchors.fill: parent
-            anchors.margins: 0
-
-            ListView {
-                id: enabledRulesView
-                model: rules
-                delegate: RuleItemDelegate {
-                    showAll: showAllButton.checked
-                }
-                section {
-                    delegate: Kirigami.ListSectionHeader { label: section }
-                    property: "section"
-                }
-            }
+    view: ListView {
+        id: enabledRulesView
+        clip: true
+        model: rules
+        delegate: RuleItemDelegate {
+            showAll: showAllButton.checked
+        }
+        section {
+            delegate: Kirigami.ListSectionHeader { label: section }
+            property: "section"
         }
     }
 
     // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
-    Kirigami.InlineMessage {
+    footer: Kirigami.InlineMessage {
         id: warningMessage
+        property bool showWarning: rules.showWarning
+
         text: i18n("You have specified the window class as unimportant.\n" +
                    "This means the settings will possibly apply to windows from all " +
                    "applications. If you really want to create a generic setting, it is " +
                    "recommended you at least limit the window types to avoid special window " +
                    "types.")
-        visible: rules.showWarning
-        Layout.fillWidth: true
+
+        onShowWarningChanged: {
+            warningMessage.visible = showWarning;
+        }
+    }
+
+    Component.onCompleted: {
+        warningMessage.visible = rulesModel.showWarning;
     }
 }

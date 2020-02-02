@@ -202,6 +202,8 @@ void RulesModel::init()
     }
 
     endResetModel();
+
+    emit showWarningChanged();
 }
 
 void RulesModel::readFromConfig(KConfigGroup *config)

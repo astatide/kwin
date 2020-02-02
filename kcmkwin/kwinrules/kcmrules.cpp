@@ -90,11 +90,25 @@ void KCMKWinRules::load()
         //m_rulesList << rule;
     }
 
+    setNeedsSave(false);
     emit rulesListModelChanged();
 }
 
 void KCMKWinRules::save()
 {
+}
+
+void KCMKWinRules::move(int sourceRow, int destRow)
+{
+    if (sourceRow == destRow
+            || (sourceRow < 0 || sourceRow > m_rulesListModel.count())
+            || (destRow < 0 || destRow > m_rulesListModel.count())) {
+        return;
+    }
+
+    m_rulesListModel.move(sourceRow, destRow);
+    setNeedsSave(true);
+    emit rulesListModelChanged();
 }
 
 } // namespace

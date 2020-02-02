@@ -25,26 +25,69 @@ import org.kde.kcm 1.2
 import org.kde.kirigami 2.5 as Kirigami
 
 ScrollViewKCM {
+    id: rulesListKCM
+
+    property int dragIndex: -1
+    property int dropIndex: -1
+    property Item dropItem: (dropIndex >= 0) ? rulesListView.contentItem.children[dropIndex]
+                                             : rulesListKCM
 
     ConfigModule.buttons: ConfigModule.Help | ConfigModule.Apply
 
     view: ListView {
-        id: ruleListView
-        model: kcm.rulesListModel
-        delegate: Kirigami.AbstractListItem {
-            id: ruleListItem
+        id: rulesListView
+        clip: true
+        focus: true
 
+        model: kcm.rulesListModel
+        delegate: Kirigami.DelegateRecycler {
+            width: rulesListView.width
+            sourceComponent: rulesListDelegate
+        }
+
+        Rectangle {
+            id: dropIndicator
+            x: 0
+            y: (dropIndex < dragIndex) ? dropItem.y : dropItem.y + dropItem.height
+            z: 100
             width: parent.width
-            //height: 2 * Kirigami.Units.gridUnit
-            focus: true
+            height: Kirigami.Units.smallSpacing
+            color: Kirigami.Theme.highlightColor
+            visible: (dropIndex >= 0) && (dropIndex != dragIndex)
+        }
+    }
+
+    Component {
+        id: rulesListDelegate
+        Kirigami.AbstractListItem {
+            id: rulesListItem
 
             highlighted: ListView.isCurrentItem
-            onClicked: ruleListView.currentIndex = index
+            onClicked: rulesListView.currentIndex = index
 
             RowLayout {
+                //FIXME: If not used within DelegateRecycler, item goes on top of the first item when clicked
+                //FIXME: Improve visuals and behavior when dragging on the list.
+                Kirigami.ListItemDragHandle {
+                    listItem: rulesListItem
+                    listView: rulesListView
+                    onMoveRequested: {
+                        dragIndex = oldIndex;
+                        dropIndex = newIndex;
+                    }
+                    onDropped: {
+                        print ("(onDropped) from index " + dragIndex + " to " + dropIndex)
+                        if (dropIndex >= 0 && dropIndex != dragIndex) {
+                            kcm.move(dragIndex, dropIndex);
+                            listView.currentIndex = dropIndex;
+                        }
+                        dragIndex = -1;
+                        dropIndex = -1;
+                    }
+                }
+
                 QQC2.Label {
                     text: modelData
-                    Layout.fillWidth: true
                 }
 
                 Kirigami.Action {
