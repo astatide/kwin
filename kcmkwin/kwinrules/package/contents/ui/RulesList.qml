@@ -57,6 +57,25 @@ ScrollViewKCM {
         }
     }
 
+    footer: Kirigami.ActionToolBar {
+        Layout.fillWidth: true
+        alignment: Qt.AlignRight
+
+        actions: [
+            Kirigami.Action {
+                text: i18n("Import")
+                iconName: "document-import"
+                onTriggered: kcm.import();
+            }
+            ,
+            Kirigami.Action {
+                text: i18n("New")
+                iconName: "list-add-symbolic"
+                onTriggered: kcm.newRule();
+            }
+        ]
+    }
+
     Component {
         id: rulesListDelegate
         Kirigami.AbstractListItem {
@@ -90,11 +109,32 @@ ScrollViewKCM {
                     text: modelData
                 }
 
-                Kirigami.Action {
-                    iconName: "edit"
-                    onTriggered: {
-                        kcm.editRule(index)
-                    }
+                Kirigami.ActionToolBar {
+                    Layout.fillWidth: true
+                    alignment: Qt.AlignRight
+                    display: QQC2.Button.IconOnly
+                    opacity: rulesListItem.hovered ? 1 : 0
+                    focus: false
+
+                    actions: [
+                        Kirigami.Action {
+                            text: i18n("Edit")
+                            iconName: "entry-edit"
+                            onTriggered: { kcm.edit(index); }
+                        }
+                        ,
+                        Kirigami.Action {
+                            text: i18n("Export")
+                            iconName: "document-export"
+                            onTriggered: { kcm.export(index); }
+                        }
+                        ,
+                        Kirigami.Action {
+                            text: i18n("Delete")
+                            iconName: "entry-delete"
+                            onTriggered: { kcm.remove(index); }
+                        }
+                    ]
                 }
             }
         }
