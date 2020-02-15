@@ -41,6 +41,7 @@ class RulesModel : public QAbstractListModel
 {
     Q_OBJECT
 
+    Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
     Q_PROPERTY(bool showWarning READ isWarningShown NOTIFY showWarningChanged)
 
 public:
@@ -78,18 +79,20 @@ public:
     void importFromRules(Rules *rules);
     Rules *exportToRules() const;
 
-    bool isWarningShown();
+    QString description() const;
+    bool isWarningShown() const;
 
 public slots:
     void init();
 
 signals:
+    void descriptionChanged();
     void showWarningChanged();
 
 private:
     void initRuleList();
     RuleItem *addRule(RuleItem *rule);
-    const QString defaultDescription() const;
+    QString defaultDescription() const;
 
     static const QHash<QString, QString> x11PropertyHash();
 

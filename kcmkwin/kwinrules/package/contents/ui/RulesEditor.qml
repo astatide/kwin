@@ -29,6 +29,8 @@ ScrollViewKCM {
     id: rulesEditor
     property var rulesModel: kcm.rulesModel
 
+    title: rulesModel.description
+
     header: RowLayout {
         id: filterBar
         Kirigami.ActionTextField {
@@ -59,6 +61,7 @@ ScrollViewKCM {
 
     view: ListView {
         id: enabledRulesView
+        clip: true
 
         model: rulesModel
         delegate: RuleItemDelegate {

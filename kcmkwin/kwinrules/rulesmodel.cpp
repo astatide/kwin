@@ -130,6 +130,9 @@ bool RulesModel::setData(const QModelIndex &index, const QVariant &value, int ro
 
     emit dataChanged(index, index, QVector<int>{role});
 
+    if (rule->hasFlag(RuleItem::AffectsDescription)) {
+        emit descriptionChanged();
+    }
     if (rule->hasFlag(RuleItem::AffectsWarning)) {
         emit showWarningChanged();
     }
@@ -157,7 +160,16 @@ RuleItem *RulesModel::ruleItem(const QString& key) const
 }
 
 
-const QString RulesModel::defaultDescription() const
+QString RulesModel::description() const
+{
+    const QString desc = m_rules["Description"]->value().toString();
+    if (!desc.isEmpty()) {
+        return desc;
+    }
+    return defaultDescription();
+}
+
+QString RulesModel::defaultDescription() const
 {
     const QString wmclass = m_rules["wmclass"]->value().toString();
     const QString title = m_rules["title"]->isEnabled() ? m_rules["title"]->value().toString() : QString();
@@ -172,7 +184,7 @@ const QString RulesModel::defaultDescription() const
     return i18n("New window settings");
 }
 
-bool RulesModel::isWarningShown()
+bool RulesModel::isWarningShown() const
 {
     const bool no_wmclass = !m_rules["wmclass"]->isEnabled()
                                 || m_rules["wmclass"]->policy() == Rules::UnimportantMatch;
@@ -203,6 +215,7 @@ void RulesModel::init()
 
     endResetModel();
 
+    emit descriptionChanged();
     emit showWarningChanged();
 }
 
@@ -227,20 +240,21 @@ void RulesModel::readFromConfig(KConfigGroup *config)
     }
     endResetModel();
 
+    emit descriptionChanged();
     emit showWarningChanged();
 }
 
 void RulesModel::writeToConfig(KConfigGroup *config) const
 {
-    if (m_rules["Description"]->value().toString().isEmpty()) {
+    const QString description = m_rules["Description"]->value().toString();
+    if (description.isEmpty()) {
         m_rules["Description"]->setValue(defaultDescription());
     }
 
     for (const RuleItem *rule : qAsConst(m_ruleList)) {
         const bool ruleHasPolicy = rule->policyType() != RulePolicy::NoPolicy;
 
-        //TODO: Add condition `&& rule->policy() > 0` to match the classic RuleWidget behavior
-        //      after implementing policy management in the UI
+        //TODO: Add condition `&& rule->policy() > 0` to match the classic RuleWidget behavior?
         if (rule->isEnabled()) {
             config->writeEntry(rule->key(), rule->value(), KConfig::Persistent);
             if (ruleHasPolicy) {
@@ -290,6 +304,7 @@ void RulesModel::prefillProperties(const QVariantMap &info)
 
     endResetModel();
 
+    emit descriptionChanged();
     emit showWarningChanged();
 }
 
@@ -327,6 +342,7 @@ Rules *RulesModel::exportToRules() const
     Rules *rules = new Rules(cfg);
     return rules;
 }
+
 
 void RulesModel::initRuleList()
 {
