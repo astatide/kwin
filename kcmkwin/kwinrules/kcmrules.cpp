@@ -45,6 +45,7 @@ namespace KWin
 KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
     : KQuickAddons::ConfigModule(parent, arguments)
     , m_rulesConfig(new KConfig(s_configFile))
+    , m_rulesModel(new RulesModel(this))
 {
     auto about = new KAboutData(QStringLiteral("kcm_kwinrules_qml"),
                                 i18n("Window Rules"),
@@ -96,6 +97,28 @@ void KCMKWinRules::load()
 
 void KCMKWinRules::save()
 {
+}
+
+void KCMKWinRules::pushRulesEditor()
+{
+    if (depth() < 2) {
+        push(QStringLiteral("RulesEditor.qml"));
+    }
+
+    setCurrentIndex(1);
+}
+
+void KCMKWinRules::newRule()
+{
+    m_rulesModel->init();
+    pushRulesEditor();
+}
+
+void KCMKWinRules::editRule(int index)
+{
+    KConfigGroup cfg = KConfigGroup(m_rulesConfig, QString::number(index + 1));
+    m_rulesModel->readFromConfig(&cfg);
+    pushRulesEditor();
 }
 
 void KCMKWinRules::move(int sourceRow, int destRow)

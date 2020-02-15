@@ -20,8 +20,8 @@
 #include "rulesdialog.h"
 #include "../../rules.h"
 
+#include <QQuickItem>
 #include <QQuickView>
-#include <QQmlContext>
 #include <QPushButton>
 #include <QTimer>
 
@@ -34,6 +34,7 @@ namespace KWin
 
 RulesDialog::RulesDialog(QWidget* parent, const char* name)
     : QDialog(parent)
+    , m_rulesModel(new RulesModel(this))
 {
     setObjectName(name);
     setModal(true);
@@ -41,17 +42,13 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
     setWindowIcon(QIcon::fromTheme("preferences-system-windows-actions"));
     setLayout(new QVBoxLayout);
 
-    // Init model and QML QuickView
-    m_rulesModel = new RulesModel(this);
-
+    // Init RuleEditor QML QuickView
     QQuickView *quickView = new QQuickView();
-    QQmlContext *qmlContext = quickView->rootContext();
-    qmlContext->setContextProperty("rules", m_rulesModel);
-
     quickView->setSource(QUrl::fromLocalFile(QStandardPaths::locate(
         QStandardPaths::GenericDataLocation,
         QStringLiteral("kpackage/kcms/kcm_kwinrules_qml/contents/ui/RulesEditor.qml"))));
     quickView->setResizeMode(QQuickView::SizeRootObjectToView);
+    quickView->rootObject()->setProperty("rulesModel", QVariant::fromValue(m_rulesModel));
 
     quickWidget = QWidget::createWindowContainer(quickView, this);
     quickWidget->setMinimumSize(QSize(680, 700));

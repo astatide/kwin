@@ -26,6 +26,8 @@ import org.kde.kcm 1.2
 
 
 ScrollViewKCM {
+    id: rulesEditor
+    property var rulesModel: kcm.rulesModel
 
     header: RowLayout {
         id: filterBar
@@ -57,8 +59,8 @@ ScrollViewKCM {
 
     view: ListView {
         id: enabledRulesView
-        clip: true
-        model: rules
+
+        model: rulesModel
         delegate: RuleItemDelegate {
             showAll: showAllButton.checked
         }
@@ -71,7 +73,7 @@ ScrollViewKCM {
     // FIXME: InlineMessage.qml:241:13: QML Label: Binding loop detected for property "verticalAlignment"
     footer: Kirigami.InlineMessage {
         id: warningMessage
-        property bool showWarning: rules.showWarning
+        property bool showWarning: rulesModel.showWarning
 
         text: i18n("You have specified the window class as unimportant.\n" +
                    "This means the settings will possibly apply to windows from all " +

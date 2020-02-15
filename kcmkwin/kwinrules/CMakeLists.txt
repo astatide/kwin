@@ -68,6 +68,7 @@ install(TARGETS kcm_kwinrules DESTINATION ${PLUGIN_INSTALL_DIR})
 
 set(kcmkwinrules_qml_SRCS
     kcmrules.cpp
+    ${kwinrules_SRCS}
 )
 
 add_library(kcm_kwinrules_qml MODULE ${kcmkwinrules_qml_SRCS})
@@ -80,6 +81,9 @@ target_link_libraries(kcm_kwinrules_qml
     KF5::CoreAddons
     KF5::QuickAddons
     KF5::WindowSystem
+
+    ${kcm_libs}
+    ${kwin_kcm_rules_XCB_LIBS}
 )
 
 kcoreaddons_desktop_to_json(kcm_kwinrules_qml "kcm_kwinrules_qml.desktop" SERVICE_TYPES kcmodule.desktop)

@@ -120,19 +120,19 @@ ScrollViewKCM {
                         Kirigami.Action {
                             text: i18n("Edit")
                             iconName: "entry-edit"
-                            onTriggered: { kcm.edit(index); }
+                            onTriggered: kcm.editRule(index);
                         }
                         ,
                         Kirigami.Action {
                             text: i18n("Export")
                             iconName: "document-export"
-                            onTriggered: { kcm.export(index); }
+                            onTriggered: kcm.export(index);
                         }
                         ,
                         Kirigami.Action {
                             text: i18n("Delete")
                             iconName: "entry-delete"
-                            onTriggered: { kcm.remove(index); }
+                            onTriggered: kcm.removeRule(index);
                         }
                     ]
                 }

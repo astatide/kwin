@@ -21,6 +21,7 @@
 #pragma once
 
 #include <rules.h>
+#include <rulesmodel.h>
 
 #include <QStringListModel>
 
@@ -38,25 +39,33 @@ class KCMKWinRules : public KQuickAddons::ConfigModule
     Q_OBJECT
 
     Q_PROPERTY(QStringList rulesListModel READ rulesListModel NOTIFY rulesListModelChanged)
+    Q_PROPERTY(RulesModel *rulesModel MEMBER m_rulesModel CONSTANT)
 
 public:
     explicit KCMKWinRules(QObject *parent, const QVariantList &arguments);
     ~KCMKWinRules();
 
-public:
-    QStringList rulesListModel() const;
 
 public slots:
     void load() override;
     void save() override;
+
+    void newRule();
+    void editRule(int index);
     void move(int sourceRow, int destRow);
 
 signals:
     void rulesListModelChanged();
 
 private:
+    QStringList rulesListModel() const;
+    void pushRulesEditor();
+
+private:
     KConfig *m_rulesConfig;
     QStringList m_rulesListModel;
+    RulesModel* m_rulesModel;
+
     //QList<KWin::Rules *> m_rulesList;
 
 };
