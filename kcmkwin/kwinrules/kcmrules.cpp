@@ -110,7 +110,7 @@ void KCMKWinRules::pushRulesEditor()
 
 void KCMKWinRules::newRule()
 {
-    m_rulesModel->init();
+    m_rulesModel->initRules();
     pushRulesEditor();
 }
 

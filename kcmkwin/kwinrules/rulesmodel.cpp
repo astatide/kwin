@@ -31,13 +31,13 @@
 #include <KWindowSystem>
 
 
-using namespace KWin;
-
+namespace KWin
+{
 
 RulesModel::RulesModel(QObject *parent)
     : QAbstractListModel(parent)
 {
-    initRuleList();
+    populateRuleList();
 }
 
 QHash< int, QByteArray > RulesModel::roleNames() const
@@ -196,7 +196,7 @@ bool RulesModel::isWarningShown() const
 }
 
 
-void RulesModel::init()
+void RulesModel::initRules()
 {
     beginResetModel();
 
@@ -311,7 +311,7 @@ void RulesModel::prefillProperties(const QVariantMap &info)
 void RulesModel::importFromRules(Rules* rules)
 {
     if (rules == nullptr) {
-        init();
+        initRules();
         return;
     }
 
@@ -344,7 +344,7 @@ Rules *RulesModel::exportToRules() const
 }
 
 
-void RulesModel::initRuleList()
+void RulesModel::populateRuleList()
 {
     m_ruleList.clear();
 
@@ -610,7 +610,7 @@ void RulesModel::initRuleList()
                          i18n("Block compositing"), i18n("Appearance & Fixes"),
                          QStringLiteral("composite-track-on")));
 
-    init();
+    initRules();
 }
 
 
@@ -744,3 +744,5 @@ QList<OptionsModel::Data> RulesModel::colorSchemesModelData() const
 
     return modelData;
 }
+
+} //namespace

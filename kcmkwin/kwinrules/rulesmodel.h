@@ -76,21 +76,19 @@ public:
     void writeToConfig(KConfigGroup *config) const;
     void prefillProperties(const QVariantMap &info);
 
+    void initRules();
     void importFromRules(Rules *rules);
     Rules *exportToRules() const;
 
     QString description() const;
     bool isWarningShown() const;
 
-public slots:
-    void init();
-
 signals:
     void descriptionChanged();
     void showWarningChanged();
 
 private:
-    void initRuleList();
+    void populateRuleList();
     RuleItem *addRule(RuleItem *rule);
     QString defaultDescription() const;
 
