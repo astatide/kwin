@@ -62,6 +62,9 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
                       " <p>Please note that this configuration will not take effect if you do not use"
                       " KWin as your window manager. If you do use a different window manager, please refer to its documentation"
                       " for how to customize window behavior.</p>"));
+
+    connect(m_rulesModel, &RulesModel::dataChanged, this, &KCMKWinRules::updateNeedsSave);
+    //connect(m_rulesModel, &RulesModel::descriptionChanged, this, &KCMKWinRules::load);
 }
 
 KCMKWinRules::~KCMKWinRules() {
@@ -80,15 +83,10 @@ void KCMKWinRules::load()
     KConfigGroup cfg(m_rulesConfig, "General");
     int rulesCount = cfg.readEntry("count", 0);
 
-    for (int i = 1; i <= rulesCount; i++) {
-        cfg = KConfigGroup(m_rulesConfig, QString::number(i));
-
+    for (int index = 0; index < rulesCount; index++) {
+        cfg = rulesConfigGroup(index);
         const QString ruleDescription = cfg.readEntry("Description");
         m_rulesListModel.append(ruleDescription);
-        //qDebug() << ruleDescription;
-
-        //KWin::Rules *rule = new KWin::Rules(cfg);
-        //m_rulesList << rule;
     }
 
     setNeedsSave(false);
@@ -97,6 +95,22 @@ void KCMKWinRules::load()
 
 void KCMKWinRules::save()
 {
+    m_rulesConfig->sync();
+}
+
+void KCMKWinRules::updateState()
+{
+    KConfigGroup cfg(m_rulesConfig, "General");
+    cfg.writeEntry("count", m_rulesListModel.count());
+
+    emit rulesListModelChanged();
+
+    updateNeedsSave();
+}
+
+void KCMKWinRules::updateNeedsSave()
+{
+    setNeedsSave(true);
 }
 
 void KCMKWinRules::pushRulesEditor()
@@ -110,28 +124,90 @@ void KCMKWinRules::pushRulesEditor()
 
 void KCMKWinRules::newRule()
 {
+    const int newIndex = m_rulesListModel.count();
+
+    KConfigGroup cfgGroup = rulesConfigGroup(newIndex);
     m_rulesModel->initRules();
+    m_rulesListModel.append(m_rulesModel->description());
+
+    updateState();
+
     pushRulesEditor();
 }
 
 void KCMKWinRules::editRule(int index)
 {
-    KConfigGroup cfg = KConfigGroup(m_rulesConfig, QString::number(index + 1));
-    m_rulesModel->readFromConfig(&cfg);
+    KConfigGroup cfgGroup = rulesConfigGroup(index);
+    m_rulesModel->readFromConfig(&cfgGroup);
+
     pushRulesEditor();
 }
 
-void KCMKWinRules::move(int sourceRow, int destRow)
+void KCMKWinRules::removeRule(int index)
 {
-    if (sourceRow == destRow
-            || (sourceRow < 0 || sourceRow > m_rulesListModel.count())
-            || (destRow < 0 || destRow > m_rulesListModel.count())) {
+    // First move the deleted group to the end, so the other rules get rearranged
+    const int lastIndex = m_rulesListModel.count() - 1;
+    moveConfigGroup(index, lastIndex);
+
+    rulesConfigGroup(lastIndex).deleteGroup();
+    m_rulesListModel.removeAt(index);
+
+    updateState();
+}
+
+void KCMKWinRules::moveRule(int sourceIndex, int destIndex)
+{
+    const int lastIndex = m_rulesListModel.count() - 1;
+    if (sourceIndex == destIndex
+            || (sourceIndex < 0 || sourceIndex > lastIndex)
+            || (destIndex < 0 || destIndex > lastIndex)) {
         return;
     }
 
-    m_rulesListModel.move(sourceRow, destRow);
-    setNeedsSave(true);
-    emit rulesListModelChanged();
+    moveConfigGroup(sourceIndex, destIndex);
+    m_rulesListModel.move(sourceIndex, destIndex);
+
+    updateState();
+}
+
+void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
+{
+    if (sourceIndex == destIndex) {
+        return;
+    }
+
+    KConfigGroup auxGroup = KConfigGroup(m_rulesConfig, QStringLiteral("auxiliar"));
+    KConfigGroup fromGroup;
+    KConfigGroup toGroup = rulesConfigGroup(sourceIndex);
+
+    // Save source into auxiliar group
+    toGroup.copyTo(&auxGroup);
+
+    // Slide all of the config groups between sourceIndex and destIndex
+    const int moveDir = (sourceIndex < destIndex) ? 1 : -1;
+    for (int index = sourceIndex; index != destIndex; index += moveDir)
+    {
+        fromGroup = rulesConfigGroup(index + moveDir);
+        toGroup.deleteGroup();  // delete group before copying to avoid old properties
+        fromGroup.copyTo(&toGroup);
+        toGroup = fromGroup;
+    }
+
+    // Save auxliar into destination group
+    toGroup.deleteGroup();
+    auxGroup.copyTo(&toGroup);
+    auxGroup.deleteGroup();
+}
+
+
+KConfigGroup KCMKWinRules::rulesConfigGroup(int index) const
+{
+    const QString groupName = QString::number(index + 1);
+    if (!m_rulesConfig->hasGroup(groupName)) {
+        KConfigGroup newGroup = KConfigGroup(m_rulesConfig, groupName);
+        return newGroup;
+    }
+    return m_rulesConfig->group(groupName);
 }
 
 } // namespace

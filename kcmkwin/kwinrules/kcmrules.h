@@ -49,16 +49,23 @@ public:
 public slots:
     void load() override;
     void save() override;
+    void updateNeedsSave();
 
     void newRule();
     void editRule(int index);
-    void move(int sourceRow, int destRow);
+    void removeRule(int index);
+    void moveRule(int sourceIndex, int destIndex);
 
 signals:
     void rulesListModelChanged();
 
+private slots:
+    void updateState();
+
 private:
     QStringList rulesListModel() const;
+    KConfigGroup rulesConfigGroup(int index) const;
+    void moveConfigGroup(int sourceIndex, int destIndex);
     void pushRulesEditor();
 
 private:

@@ -97,7 +97,7 @@ ScrollViewKCM {
                     onDropped: {
                         print ("(onDropped) from index " + dragIndex + " to " + dropIndex)
                         if (dropIndex >= 0 && dropIndex != dragIndex) {
-                            kcm.move(dragIndex, dropIndex);
+                            kcm.moveRule(dragIndex, dropIndex);
                             listView.currentIndex = dropIndex;
                         }
                         dragIndex = -1;
