@@ -128,6 +128,15 @@ bool RulesModel::setData(const QModelIndex &index, const QVariant &value, int ro
         return false;
     }
 
+    emitDataUpdated(index, role);
+
+    return true;
+}
+
+void RulesModel::emitDataUpdated(const QModelIndex &index, int role)
+{
+    const RuleItem *rule = m_ruleList.at(index.row());
+
     emit dataChanged(index, index, QVector<int>{role});
 
     if (rule->hasFlag(RuleItem::AffectsDescription)) {
@@ -136,8 +145,6 @@ bool RulesModel::setData(const QModelIndex &index, const QVariant &value, int ro
     if (rule->hasFlag(RuleItem::AffectsWarning)) {
         emit showWarningChanged();
     }
-
-    return true;
 }
 
 RuleItem *RulesModel::addRule(RuleItem *rule)
@@ -158,7 +165,6 @@ RuleItem *RulesModel::ruleItem(const QString& key) const
 {
     return m_rules[key];
 }
-
 
 QString RulesModel::description() const
 {
@@ -207,8 +213,8 @@ void RulesModel::initRules()
         //FIXME: After Qt 5.14 the QML ComboBox will allow to use `setData()` directly
         //       No need to connect this signals
         const QModelIndex index = this->index(row, 0);
-        connect(rule, &RuleItem::valueChanged,  this, [this, index](QVariant value){ setData(index, value, RulesModel::ValueRole); });
-        connect(rule, &RuleItem::policyChanged, this, [this, index](QVariant policy){ setData(index, policy, RulesModel::PolicyRole); });
+        connect(rule, &RuleItem::valueChanged,  this, [this, index]{ emitDataUpdated(index, RulesModel::ValueRole); });
+        connect(rule, &RuleItem::policyChanged, this, [this, index]{ emitDataUpdated(index, RulesModel::PolicyRole); });
 
         row++;
     }
@@ -222,11 +228,14 @@ void RulesModel::initRules()
 void RulesModel::readFromConfig(KConfigGroup *config)
 {
     beginResetModel();
+
     for (RuleItem *rule : qAsConst(m_ruleList)) {
         if (!config->hasKey(rule->key())) {
             rule->reset();
             continue;
         }
+
+        rule->blockSignals(true);
 
         rule->setEnabled(true);
 
@@ -237,7 +246,10 @@ void RulesModel::readFromConfig(KConfigGroup *config)
             const int policy = config->readEntry(rule->policyKey(), int());
             rule->setPolicy(policy);
         }
+
+        rule->blockSignals(false);
     }
+
     endResetModel();
 
     emit descriptionChanged();

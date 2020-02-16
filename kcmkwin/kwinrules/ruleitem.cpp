@@ -91,9 +91,14 @@ RuleItem::~RuleItem()
 
 void RuleItem::reset()
 {
+    const bool oldBlocked = signalsBlocked();
+    blockSignals(true);
+
     setValue(QVariant());
     setPolicy(Rules::Unused);
     setEnabled(hasFlag(AlwaysEnabled) | hasFlag(StartEnabled));
+
+    blockSignals(oldBlocked);
 }
 
 QString RuleItem::key() const
