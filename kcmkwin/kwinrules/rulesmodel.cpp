@@ -332,70 +332,70 @@ void RulesModel::initRuleList()
 
     //Rule description
     addRule(new RuleItem(QLatin1String("Description"),
-                         RulePolicy::NoPolicy, RuleType::String,
+                         RulePolicy::NoPolicy, RuleItem::String,
                          i18n("Description"), i18n("Window matching"),
                          QStringLiteral("entry-edit")));
     m_rules["Description"]->setFlags(RuleItem::AlwaysEnabled | RuleItem::AffectsDescription);
 
     // Window matching
     addRule(new RuleItem(QLatin1String("wmclass"),
-                         RulePolicy::StringMatch, RuleType::String,
+                         RulePolicy::StringMatch, RuleItem::String,
                          i18n("Window class (application)"), i18n("Window matching"),
                          QStringLiteral("window")));
     m_rules["wmclass"]->setFlags(RuleItem::AlwaysEnabled | RuleItem::AffectsWarning | RuleItem::AffectsDescription);
 
     addRule(new RuleItem(QLatin1String("wmclasscomplete"),
-                         RulePolicy::NoPolicy, RuleType::Boolean,
+                         RulePolicy::NoPolicy, RuleItem::Boolean,
                          i18n("Match whole window class"), i18n("Window matching"),
                          QStringLiteral("window")));
     m_rules["wmclasscomplete"]->setFlags(RuleItem::AlwaysEnabled);
 
     addRule(new RuleItem(QLatin1String("windowrole"),
-                         RulePolicy::NoPolicy, RuleType::String,
+                         RulePolicy::NoPolicy, RuleItem::String,
                          i18n("Window role"), i18n("Window matching"),
                          QStringLiteral("dialog-object-properties")));
 
     addRule(new RuleItem(QLatin1String("types"),
-                         RulePolicy::NoPolicy, RuleType::FlagsOption,
+                         RulePolicy::NoPolicy, RuleItem::FlagsOption,
                          i18n("Window types"), i18n("Window matching"),
                          QStringLiteral("window-duplicate"),
                          windowTypesModelData()));
     m_rules["types"]->setFlags(RuleItem::StartEnabled | RuleItem::AffectsWarning );
 
     addRule(new RuleItem(QLatin1String("title"),
-                         RulePolicy::StringMatch, RuleType::String,
+                         RulePolicy::StringMatch, RuleItem::String,
                          i18n("Window title"), i18n("Window matching"),
                          QStringLiteral("edit-comment")));
     m_rules["title"]->setFlags(RuleItem::AffectsDescription);
 
     addRule(new RuleItem(QLatin1String("clientmachine"),
-                         RulePolicy::StringMatch, RuleType::String,
+                         RulePolicy::StringMatch, RuleItem::String,
                          i18n("Machine (hostname)"), i18n("Window matching"),
                          QStringLiteral("computer")));
 
     // Size & Position
     addRule(new RuleItem(QLatin1String("position"),
-                         RulePolicy::SetRule, RuleType::Coordinate,
+                         RulePolicy::SetRule, RuleItem::Coordinate,
                          i18n("Position"), i18n("Size & Position"),
                          QStringLiteral("transform-move")));
 
     addRule(new RuleItem(QLatin1String("size"),
-                         RulePolicy::SetRule, RuleType::Coordinate,
+                         RulePolicy::SetRule, RuleItem::Coordinate,
                          i18n("Size"), i18n("Size & Position"),
                          QStringLiteral("image-resize-symbolic")));
 
     addRule(new RuleItem(QLatin1String("maximizehoriz"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Maximized horizontally"), i18n("Size & Position"),
                          QStringLiteral("resizecol")));
 
     addRule(new RuleItem(QLatin1String("maximizevert"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Maximized vertically"), i18n("Size & Position"),
                          QStringLiteral("resizerow")));
 
     addRule(new RuleItem(QLatin1String("desktop"),
-                         RulePolicy::SetRule, RuleType::Option,
+                         RulePolicy::SetRule, RuleItem::Option,
                          i18n("Virtual Desktop"), i18n("Size & Position"),
                          QStringLiteral("virtual-desktops"),
                          virtualDesktopsModelData()));
@@ -404,7 +404,7 @@ void RulesModel::initRuleList()
     m_activities = new KActivities::Consumer(this);
 
     addRule(new RuleItem(QLatin1String("activity"),
-                         RulePolicy::SetRule, RuleType::Option,
+                         RulePolicy::SetRule, RuleItem::Option,
                          i18n("Activity"), i18n("Size & Position"),
                          QStringLiteral("activities"),
                          activitiesModelData()));
@@ -418,33 +418,33 @@ void RulesModel::initRuleList()
 #endif
 
     addRule(new RuleItem(QLatin1String("screen"),
-                         RulePolicy::SetRule, RuleType::Integer,
+                         RulePolicy::SetRule, RuleItem::Integer,
                          i18n("Screen"), i18n("Size & Position"),
                          QStringLiteral("osd-shutd-screen")));
 
     addRule(new RuleItem(QLatin1String("fullscreen"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Fullscreen"), i18n("Size & Position"),
                          QStringLiteral("view-fullscreen")));
 
     addRule(new RuleItem(QLatin1String("minimize"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Minimized"), i18n("Size & Position"),
                          QStringLiteral("window-minimize")));
 
     addRule(new RuleItem(QLatin1String("shade"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Shaded"), i18n("Size & Position"),
                          QStringLiteral("window-shade")));
 
     addRule(new RuleItem(QLatin1String("placement"),
-                         RulePolicy::ForceRule, RuleType::Option,
+                         RulePolicy::ForceRule, RuleItem::Option,
                          i18n("Initial placement"), i18n("Size & Position"),
                          QStringLiteral("region"),
                          placementModelData()));
 
     addRule(new RuleItem(QLatin1String("ignoregeometry"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Ignore requested geometry"), i18n("Size & Position"),
                          QStringLiteral("view-time-schedule-baselined-remove")));
     m_rules["ignoregeometry"]->setDescription(i18n("Windows can ask to appear in a certain position.\n"
@@ -453,17 +453,17 @@ void RulesModel::initRuleList()
                                                    "to unconditionally popup in the middle of your screen."));
 
     addRule(new RuleItem(QLatin1String("minsize"),
-                         RulePolicy::ForceRule, RuleType::Coordinate,
+                         RulePolicy::ForceRule, RuleItem::Coordinate,
                          i18n("Minimum Size"), i18n("Size & Position"),
                          QStringLiteral("image-resize-symbolic")));
 
     addRule(new RuleItem(QLatin1String("maxsize"),
-                         RulePolicy::ForceRule, RuleType::Coordinate,
+                         RulePolicy::ForceRule, RuleItem::Coordinate,
                          i18n("Maximum Size"), i18n("Size & Position"),
                          QStringLiteral("image-resize-symbolic")));
 
     addRule(new RuleItem(QLatin1String("strictgeometry"),
-                         RulePolicy::ForceRule, RuleType::Boolean,
+                         RulePolicy::ForceRule, RuleItem::Boolean,
                          i18n("Obey geometry restrictions"), i18n("Size & Position"),
                          QStringLiteral("transform-crop-and-resize")));
     m_rules["strictgeometry"]->setDescription(i18n("Eg. terminals or video players can ask to keep a certain aspect ratio\n"
@@ -474,62 +474,62 @@ void RulesModel::initRuleList()
 
     // Arrangement & Access
     addRule(new RuleItem(QLatin1String("above"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Keep above"), i18n("Arrangement & Access"),
                          QStringLiteral("window-keep-above")));
 
     addRule(new RuleItem(QLatin1String("below"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Keep below"), i18n("Arrangement & Access"),
                          QStringLiteral("window-keep-below")));
 
     addRule(new RuleItem(QLatin1String("skiptaskbar"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Skip taskbar"), i18n("Arrangement & Access"),
                          QStringLiteral("kt-show-statusbar")));
     m_rules["skiptaskbar"]->setDescription(i18n("Window shall (not) appear in the taskbar."));
 
     addRule(new RuleItem(QLatin1String("skippager"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Skip pager"), i18n("Arrangement & Access"),
                          QStringLiteral("org.kde.plasma.pager")));
     m_rules["skippager"]->setDescription(i18n("Window shall (not) appear in the manager for virtual desktops"));
 
     addRule(new RuleItem(QLatin1String("skipswitcher"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("Skip switcher"), i18n("Arrangement & Access"),
                          QStringLiteral("preferences-system-windows-effect-flipswitch")));
     m_rules["skipswitcher"]->setDescription(i18n("Window shall (not) appear in the Alt+Tab list"));
 
     addRule(new RuleItem(QLatin1String("shortcut"),
-                         RulePolicy::SetRule, RuleType::Shortcut,
+                         RulePolicy::SetRule, RuleItem::Shortcut,
                          i18n("Shortcut"), i18n("Arrangement & Access"),
                          QStringLiteral("configure-shortcuts")));
 
     // Appearance & Fixes
     addRule(new RuleItem(QLatin1String("noborder"),
-                         RulePolicy::SetRule, RuleType::Boolean,
+                         RulePolicy::SetRule, RuleItem::Boolean,
                          i18n("No titlebar and frame"), i18n("Appearance & Fixes"),
                          QStringLiteral("dialog-cancel")));
 
     addRule(new RuleItem(QLatin1String("decocolor"),
-                         RulePolicy::ForceRule, RuleType::Option,
+                         RulePolicy::ForceRule, RuleItem::Option,
                          i18n("Titlebar color scheme"), i18n("Appearance & Fixes"),
                          QStringLiteral("preferences-desktop-theme"),
                          colorSchemesModelData()));
 
     addRule(new RuleItem(QLatin1String("opacityactive"),
-                         RulePolicy::ForceRule, RuleType::Percentage,
+                         RulePolicy::ForceRule, RuleItem::Percentage,
                          i18n("Active opacity"), i18n("Appearance & Fixes"),
                          QStringLiteral("edit-opacity")));
 
     addRule(new RuleItem(QLatin1String("opacityinactive"),
-                         RulePolicy::ForceRule, RuleType::Percentage,
+                         RulePolicy::ForceRule, RuleItem::Percentage,
                          i18n("Inactive opacity"), i18n("Appearance & Fixes"),
                          QStringLiteral("edit-opacity")));
 
     addRule(new RuleItem(QLatin1String("fsplevel"),
-                         RulePolicy::ForceRule, RuleType::Option,
+                         RulePolicy::ForceRule, RuleItem::Option,
                          i18n("Focus stealing prevention"), i18n("Appearance & Fixes"),
                          QStringLiteral("preferences-system-windows-effect-glide"),
                          focusModelData()));
@@ -540,7 +540,7 @@ void RulesModel::initRuleList()
                                              "\"Extreme\" will completely prevent it from taking the focus."));
 
     addRule(new RuleItem(QLatin1String("fpplevel"),
-                         RulePolicy::ForceRule, RuleType::Option,
+                         RulePolicy::ForceRule, RuleItem::Option,
                          i18n("Focus protection"), i18n("Appearance & Fixes"),
                          QStringLiteral("preferences-system-windows-effect-minimize"),
                          focusModelData()));
@@ -551,7 +551,7 @@ void RulesModel::initRuleList()
                                              "assigned to the window that wants the focus."));
 
     addRule(new RuleItem(QLatin1String("acceptfocus"),
-                         RulePolicy::ForceRule, RuleType::Boolean,
+                         RulePolicy::ForceRule, RuleItem::Boolean,
                          i18n("Accept focus"), i18n("Appearance & Fixes"),
                          QStringLiteral("preferences-desktop-cursors")));
     m_rules["acceptfocus"]->setDescription(i18n("Windows may prevent to get the focus (activate) when being clicked.\n"
@@ -559,7 +559,7 @@ void RulesModel::initRuleList()
                                                 "from getting focused on a mouse click."));
 
     addRule(new RuleItem(QLatin1String("disableglobalshortcuts"),
-                         RulePolicy::ForceRule, RuleType::Boolean,
+                         RulePolicy::ForceRule, RuleItem::Boolean,
                          i18n("Ignore global shortcuts"), i18n("Appearance & Fixes"),
                          QStringLiteral("input-keyboard-virtual-off")));
     m_rules["disableglobalshortcuts"]->setDescription(i18n("When used, a window will receive\n"
@@ -572,23 +572,23 @@ void RulesModel::initRuleList()
                                                            "while it's active!"));
 
     addRule(new RuleItem(QLatin1String("closeable"),
-                         RulePolicy::ForceRule, RuleType::Boolean,
+                         RulePolicy::ForceRule, RuleItem::Boolean,
                          i18n("Closeable"), i18n("Appearance & Fixes"),
                          QStringLiteral("dialog-close")));
 
     addRule(new RuleItem(QLatin1String("type"),
-                         RulePolicy::ForceRule, RuleType::Option,
+                         RulePolicy::ForceRule, RuleItem::Option,
                          i18n("Set window type"), i18n("Appearance & Fixes"),
                          QStringLiteral("window-duplicate"),
                          windowTypesModelData()));
 
     addRule(new RuleItem(QLatin1String("desktopfile"),
-                         RulePolicy::SetRule, RuleType::String,
+                         RulePolicy::SetRule, RuleItem::String,
                          i18n("Desktop file name"), i18n("Appearance & Fixes"),
                          QStringLiteral("application-x-desktop")));
 
     addRule(new RuleItem(QLatin1String("blockcompositing"),
-                         RulePolicy::ForceRule, RuleType::Boolean,
+                         RulePolicy::ForceRule, RuleItem::Boolean,
                          i18n("Block compositing"), i18n("Appearance & Fixes"),
                          QStringLiteral("composite-track-on")));
 

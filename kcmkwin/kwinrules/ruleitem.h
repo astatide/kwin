@@ -29,18 +29,6 @@
 namespace KWin
 {
 
-enum RuleType {
-    Undefined,
-    Boolean,
-    String,
-    Integer,
-    Option,
-    FlagsOption,
-    Percentage,
-    Coordinate,
-    Shortcut
-};
-
 class RuleItemPrivate;
 
 class RuleItem : public QObject
@@ -48,6 +36,18 @@ class RuleItem : public QObject
     Q_OBJECT
 
 public:
+    enum Type {
+        Undefined,
+        Boolean,
+        String,
+        Integer,
+        Option,
+        FlagsOption,
+        Percentage,
+        Coordinate,
+        Shortcut
+    };
+
     enum Flags {
         NoFlags            = 0,
         AlwaysEnabled      = 1u << 0,
@@ -60,7 +60,7 @@ public:
 public:
     RuleItem(const QString &key,
              const RulePolicy::Type policyType,
-             const RuleType type,
+             const Type type,
              const QString &name,
              const QString &section,
              const QString &iconName = QStringLiteral("window"),
@@ -83,7 +83,7 @@ public:
     bool hasFlag(uint flag) const;
     void setFlags(uint flags, bool active=true);
 
-    RuleType type() const;
+    Type type() const;
     QVariant value() const;
     void setValue(QVariant value);
 
@@ -107,7 +107,7 @@ signals:
     void policyChanged(QVariant policy);
 
 private:
-    static QVariant typedValue(const QVariant &value, const RuleType type);
+    static QVariant typedValue(const QVariant &value, const Type type);
 
 private:
     RuleItemPrivate *d;

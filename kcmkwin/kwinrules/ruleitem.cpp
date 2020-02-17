@@ -49,14 +49,14 @@ public:
     QString m_description;
     uint m_flags;
 
-    RuleType m_type;
+    RuleItem::Type m_type;
     QVariant m_value;
 };
 
 
 RuleItem::RuleItem(const QString &key,
                    const RulePolicy::Type policyType,
-                   const RuleType type,
+                   const RuleItem::Type type,
                    const QString &name,
                    const QString &section,
                    const QString &iconName,
@@ -155,7 +155,7 @@ void RuleItem::setFlags(uint flags, bool active)
     }
 }
 
-RuleType RuleItem::type() const
+RuleItem::Type RuleItem::type() const
 {
     return d->m_type;
 }
@@ -221,7 +221,7 @@ QString RuleItem::policyKey() const
     return p->policyKey(d->m_key);
 }
 
-QVariant RuleItem::typedValue(const QVariant &value, const RuleType type)
+QVariant RuleItem::typedValue(const QVariant &value, const RuleItem::Type type)
 {
     switch (type) {
         case Undefined:
