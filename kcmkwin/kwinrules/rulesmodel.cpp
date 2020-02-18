@@ -598,7 +598,7 @@ void RulesModel::initRuleList()
 
 const QHash<QString, QString> RulesModel::x11PropertyHash()
 {
-    return {
+    static const auto propertyToRule = QHash<QString, QString> {
         { "x11DesktopNumber",   "desktop"       },
         { "maximizeHorizontal", "maximizehoriz" },
         { "maximizeVertical",   "maximizevert"  },
@@ -614,12 +614,13 @@ const QHash<QString, QString> RulesModel::x11PropertyHash()
         { "type",               "type"          },
         { "desktopFile",        "desktopfile"   }
     };
+    return propertyToRule;
 };
 
 
 QList<OptionsModel::Data> RulesModel::windowTypesModelData() const
 {
-    return {
+    static const auto modelData = QList<OptionsModel::Data> {
         //TODO: Find/create better icons
         { NET::Normal,  i18n("Normal Window")     , QStringLiteral("window") },
         { NET::Dialog,  i18n("Dialog Window")     , QStringLiteral("window-duplicate")         },
@@ -632,6 +633,7 @@ QList<OptionsModel::Data> RulesModel::windowTypesModelData() const
 //        { NET::Override,i18n("Unmanaged Window")   },  deprecated
         { NET::TopMenu, i18n("Standalone Menubar"), QStringLiteral("open-menu-symbolic")       }
     };
+    return modelData;
 }
 
 QList<OptionsModel::Data> RulesModel::virtualDesktopsModelData() const
@@ -678,7 +680,7 @@ QList<OptionsModel::Data> RulesModel::activitiesModelData() const
 QList<OptionsModel::Data> RulesModel::placementModelData() const
 {
     // From "placement.h" : Placement rule is stored as a string, not the enum value
-    return {
+    static const auto modelData = QList<OptionsModel::Data> {
         { Placement::policyToString(Placement::Default),      i18n("Default")             },
         { Placement::policyToString(Placement::NoPlacement),  i18n("No Placement")        },
         { Placement::policyToString(Placement::Smart),        i18n("Minimal Overlapping") },
@@ -690,17 +692,19 @@ QList<OptionsModel::Data> RulesModel::placementModelData() const
         { Placement::policyToString(Placement::UnderMouse),   i18n("Under Mouse")         },
         { Placement::policyToString(Placement::OnMainWindow), i18n("On Main Window")      }
     };
+    return modelData;
 }
 
 QList<OptionsModel::Data> RulesModel::focusModelData() const
 {
-    return {
+    static const auto modelData = QList<OptionsModel::Data> {
         { 0, i18n("None")    },
         { 1, i18n("Low")     },
         { 2, i18n("Normal")  },
         { 3, i18n("High")    },
         { 4, i18n("Extreme") }
     };
+    return modelData;
 }
 
 QList<OptionsModel::Data> RulesModel::colorSchemesModelData() const
