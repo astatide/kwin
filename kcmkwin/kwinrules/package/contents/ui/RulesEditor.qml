@@ -33,7 +33,7 @@ ColumnLayout {
             placeholderText: i18n("Search...")
         }
         QQC2.ToolButton {
-            id: editModeButton
+            id: showAllButton
             icon.name: checked ? 'view-visible' : 'view-hidden'
             checkable: true
             text: i18n("Show all rules")
@@ -52,8 +52,8 @@ ColumnLayout {
             ListView {
                 id: enabledRulesView
                 model: rules
-                delegate: RuleDelegate {
-                    editMode: editModeButton.checked
+                delegate: RuleItemDelegate {
+                    showAll: showAllButton.checked
                 }
                 section {
                     delegate: Kirigami.ListSectionHeader { label: section }

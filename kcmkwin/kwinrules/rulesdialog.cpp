@@ -50,7 +50,7 @@ RulesDialog::RulesDialog(QWidget* parent, const char* name)
 
     quickView->setSource(QUrl::fromLocalFile(QStandardPaths::locate(
         QStandardPaths::GenericDataLocation,
-        QStringLiteral(KWIN_NAME "/kwinruleseditor/main.qml"))));
+        QStringLiteral("kpackage/kcms/kcm_kwinrules_qml/contents/ui/RulesEditor.qml"))));
     quickView->setResizeMode(QQuickView::SizeRootObjectToView);
 
     quickWidget = QWidget::createWindowContainer(quickView, this);

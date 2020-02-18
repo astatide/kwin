@@ -30,22 +30,21 @@ import org.kde.kirigami 2.10 as Kirigami
 QQC2.ItemDelegate {
     id: ruleDelegate
 
-    property bool editMode: false
+    property bool showAll: false
     property bool itemIsEnabled: model.enabled
 
-    enabled: model.enabled || editMode
+    enabled: itemIsEnabled || showAll
     height: enabled ? 2.1 * Kirigami.Units.gridUnit : 0
     opacity: (enabled) ? 1 : 0
     focus: true
 
     Kirigami.Theme.colorSet: Kirigami.Theme.View
-    //alternatingBackground: true
 
     Behavior on height {
         PropertyAnimation { duration: 2 * Kirigami.Units.longDuration }
     }
     Behavior on opacity {
-        PropertyAnimation {}
+        PropertyAnimation { duration: 2 * Kirigami.Units.longDuration }
     }
 
     anchors {
@@ -61,12 +60,18 @@ QQC2.ItemDelegate {
         }
 
         QQC2.CheckBox {
-            //visible: editMode
             opacity: model.selectable ? 1 : 0
             checked: model.enabled
             onToggled: { model.enabled = checked; }
         }
 
+
+/*
+        Kirigami.Icon {
+            source: model.icon
+            Layout.preferredHeight: Kirigami.Units.iconSizes.medium
+            Layout.preferredWidth: Kirigami.Units.iconSizes.medium
+*/
         QQC2.ToolButton {
             icon.name: model.iconName
             QQC2.ToolTip.text: model.description
@@ -90,7 +95,7 @@ QQC2.ItemDelegate {
             textRole: "text"
             currentIndex: model.selectedIndex
             onActivated: {
-                print ("Policy changed for: " + key + " policyId: " + index);
+                print ("Policy changed for rule " + key + ": policyIndex = " + index);
                 model.selectedIndex = currentIndex;
             }
             //FIXME: After Qt 5.14

@@ -95,18 +95,38 @@ Loader {
     Component {
         id: optionEditor
         QQC2.ComboBox {
+            id: optionCombo
             flat: true
-            model: ruleOptions
             textRole: "text"
+
+            delegate: QQC2.ItemDelegate {
+                Kirigami.Theme.colorSet: Kirigami.Theme.View
+                width: parent.width
+                highlighted: optionCombo.highlightedIndex == index
+                contentItem: RowLayout {
+                    Kirigami.Icon {
+                        source: model.icon
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                    }
+                    QQC2.Label {
+                        text: model.text
+                        color: highlighted ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+
+            model: ruleOptions
             currentIndex: model.selectedIndex
             onActivated: {
-                print ("Rule changed: " + key + " INDEX := " + currentIndex)
+                print ("Rule changed: " + key + " INDEX := " + currentIndex);
                 model.selectedIndex = currentIndex;
             }
             //FIXME: After Qt 5.14
             //valueRole: "value"
-            //currentValue: modelValue
-            //onActivated: valueEditor.valueEdited(currentValue)
+            //currentValue: ruleValue
+            //onActivated: { valueEditor.valueEdited(currentValue); }
         }
     }
 
@@ -119,11 +139,12 @@ Loader {
             Repeater {
                 id: flagsRepeater
                 model: ruleOptions
+
                 QQC2.ToolButton {
                     property int bit: model.value
-                    icon.name: "window-duplicate"
+                    icon.name: model.iconName
                     checkable: true
-                    checked: ((ruleValue & (1 << bit)) >> bit) == 1
+                    checked: (ruleValue & (1 << bit)) == (1 << bit)
                     QQC2.ToolTip.text: model.text
                     QQC2.ToolTip.visible: hovered
                     onToggled: {
