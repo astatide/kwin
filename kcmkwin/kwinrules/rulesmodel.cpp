@@ -38,7 +38,6 @@ RulesModel::RulesModel(QObject *parent)
     : QAbstractListModel(parent)
 {
     initRuleList();
-    initPropertyMap();
 }
 
 QHash< int, QByteArray > RulesModel::roleNames() const
@@ -274,8 +273,9 @@ void RulesModel::prefillProperties(const QVariantMap &info)
         m_rules["maxsize"]->setValue(size);
     }
 
+    const auto ruleForProperty = x11PropertyHash();
     for (QString &property : info.keys()) {
-        const QString ruleKey = m_ruleForProperty.value(property, QString());
+        const QString ruleKey = ruleForProperty.value(property, QString());
         if (ruleKey.isEmpty() || m_rules[ruleKey]->isEnabled()) {
             continue;
         }
@@ -593,26 +593,27 @@ void RulesModel::initRuleList()
     init();
 }
 
-void RulesModel::initPropertyMap()
-{
-    m_ruleForProperty.clear();
 
-    // Map window properties to rule keys
-    m_ruleForProperty.insert(QStringLiteral("x11DesktopNumber"), QStringLiteral("desktop"));
-    m_ruleForProperty.insert(QStringLiteral("maximizeHorizontal"), QStringLiteral("maximizehoriz"));
-    m_ruleForProperty.insert(QStringLiteral("maximizeVertical"), QStringLiteral("maximizevert"));
-    m_ruleForProperty.insert(QStringLiteral("minimized"), QStringLiteral("minimize"));
-    m_ruleForProperty.insert(QStringLiteral("shaded"), QStringLiteral("shade"));
-    m_ruleForProperty.insert(QStringLiteral("fullscreen"), QStringLiteral("fullscreen"));
-    m_ruleForProperty.insert(QStringLiteral("keepAbove"), QStringLiteral("above"));
-    m_ruleForProperty.insert(QStringLiteral("keepBelow"), QStringLiteral("below"));
-    m_ruleForProperty.insert(QStringLiteral("noBorder"), QStringLiteral("noborder"));
-    m_ruleForProperty.insert(QStringLiteral("skipTaskbar"), QStringLiteral("skiptaskbar"));
-    m_ruleForProperty.insert(QStringLiteral("skipPager"), QStringLiteral("skippager"));
-    m_ruleForProperty.insert(QStringLiteral("skipSwitcher"), QStringLiteral("skipswitcher"));
-    m_ruleForProperty.insert(QStringLiteral("type"), QStringLiteral("type"));
-    m_ruleForProperty.insert(QStringLiteral("desktopFile"), QStringLiteral("desktopfile"));
-}
+const QHash<QString, QString> RulesModel::x11PropertyHash()
+{
+    return {
+        { "x11DesktopNumber",   "desktop"       },
+        { "maximizeHorizontal", "maximizehoriz" },
+        { "maximizeVertical",   "maximizevert"  },
+        { "minimized",          "minimize"      },
+        { "shaded",             "shade"         },
+        { "fullscreen",         "fullscreen"    },
+        { "keepAbove",          "above"         },
+        { "keepBelow",          "below"         },
+        { "noBorder",           "noborder"      },
+        { "skipTaskbar",        "skiptaskbar"   },
+        { "skipPager",          "skippager"     },
+        { "skipSwitcher",       "skipswitcher"  },
+        { "type",               "type"          },
+        { "desktopFile",        "desktopfile"   }
+    };
+};
+
 
 QList<OptionsModel::Data> RulesModel::windowTypesModelData() const
 {

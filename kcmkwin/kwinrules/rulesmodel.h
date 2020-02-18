@@ -88,9 +88,10 @@ signals:
 
 private:
     void initRuleList();
-    void initPropertyMap();
     RuleItem *addRule(RuleItem *rule);
     const QString defaultDescription() const;
+
+    static const QHash<QString, QString> x11PropertyHash();
 
     QList<OptionsModel::Data> windowTypesModelData() const;
     QList<OptionsModel::Data> virtualDesktopsModelData() const;
@@ -102,8 +103,6 @@ private:
 private:
     QList<RuleItem *> m_ruleList;
     QHash<QString, RuleItem *> m_rules;
-
-    QHash<QString, QString> m_ruleForProperty;
 #ifdef KWIN_BUILD_ACTIVITIES
     KActivities::Consumer *m_activities;
 #endif
