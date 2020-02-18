@@ -22,6 +22,9 @@
 #define KWIN_RULEITEM_P_H
 
 #include <QAbstractListModel>
+#include <QIcon>
+#include <QVariant>
+
 
 namespace KWin {
 
@@ -48,7 +51,7 @@ public:
         : m_key(key)
         , m_name(name)
         , m_section(section)
-        , m_iconName(iconName)
+        , m_icon(QIcon::fromTheme(iconName))
         , m_enabled(false)
         , m_flags(0)
         {};
@@ -57,7 +60,7 @@ public:
     QString m_key;
     QString m_name;
     QString m_section;
-    QString m_iconName;
+    QIcon m_icon;
 
     bool m_enabled;
 
@@ -78,9 +81,20 @@ class OptionsModel : public QAbstractListModel
 
 public:
     struct Data {
+        Data(const QVariant &value, const QString &text) : value(value), text(text) {}
+        Data(const QVariant &value, const QString &text, const QString &iconName)
+            : value(value)
+            , text(text)
+            , icon(QIcon::fromTheme(iconName))
+            {}
+        Data(const QVariant &value, const QString &text, const QIcon &icon)
+            : value(value)
+            , text(text)
+            , icon(icon)
+            {}
         QVariant value;
         QString text;
-        QString iconName {};
+        QIcon icon;
         QString description {};
     };
 
@@ -102,7 +116,7 @@ public:
     void updateModelData(const QList<Data> &data);
 
 signals:
-    void valueChanged(int index);
+    void valueChanged(QVariant value);
 
 public:
     QList<Data> m_data;

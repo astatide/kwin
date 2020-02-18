@@ -57,8 +57,8 @@ public:
     QString key() const;
     QString name() const;
     QString section() const;
-    QString iconName() const;
     QIcon icon() const;
+    QString iconName() const;
 
     bool isEnabled() const;
     void setEnabled(bool enabled);
@@ -86,9 +86,11 @@ public:
 public slots:
     void setOptionsData(const QList<OptionsModel::Data> &data);
 
+//FIXME: After Qt 5.14 the QML ComboBox will allow to use `setValue()` and `setPolicy()` directly
+//       No need to raise this signals
 signals:
     void valueChanged(QVariant value);
-    void policyChanged(int policy);
+    void policyChanged(QVariant policy);
 
 private:
     static QVariant typedValue(const QVariant &value, const RuleType type);

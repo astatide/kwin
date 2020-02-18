@@ -42,15 +42,15 @@ RuleItem::RuleItem(const QString &key,
     d->m_type = type;
     if (type == Option || type == FlagsOption) {
         o = new OptionsModel(options);
-        connect(o, &OptionsModel::valueChanged, this, [this] { d->m_value = o->value(); });
     }
 
     setValue(QVariant());
 
-    //FIXME: After Qt 5.14 the QML ComboBox will allow to use `setValue()` and `setPolicy()` directly.
-    //       No need to raise this signal.
+    //FIXME: After Qt 5.14 the QML ComboBox will allow to use `setValue()` and `setPolicy()` directly
+    //       No need to raise this signals
     connect(p, &OptionsModel::valueChanged, this, &RuleItem::policyChanged);
     if (o) {
+        connect(o, &OptionsModel::valueChanged, this, [this]{ d->m_value = o->value(); });
         connect(o, &OptionsModel::valueChanged, this, &RuleItem::valueChanged);
     }
 }
@@ -86,12 +86,12 @@ QString RuleItem::section() const
 
 QString RuleItem::iconName() const
 {
-    return d->m_iconName;
+    return d->m_icon.name();
 }
 
 QIcon RuleItem::icon() const
 {
-    return QIcon::fromTheme(d->m_iconName);
+    return d->m_icon;
 }
 
 QString RuleItem::description() const
@@ -146,7 +146,6 @@ void RuleItem::setValue(QVariant value)
     if (d->m_type == Option) {
         o->setValue(value);
     }
-
     d->m_value = typedValue(value, d->m_type);
 }
 
@@ -229,8 +228,9 @@ QHash<int, QByteArray> OptionsModel::roleNames() const
     return {
         {Qt::DisplayRole,    QByteArrayLiteral("text")},
         {Qt::UserRole,       QByteArrayLiteral("value")},
-        {Qt::DecorationRole, QByteArrayLiteral("iconName")},
+        {Qt::DecorationRole, QByteArrayLiteral("icon")},
         {Qt::ToolTipRole,    QByteArrayLiteral("description")},
+        {Qt::UserRole + 1,   QByteArrayLiteral("iconName")},
     };
 }
 
@@ -256,7 +256,9 @@ QVariant OptionsModel::data(const QModelIndex &index, int role) const
         case Qt::UserRole:
             return data.value;
         case Qt::DecorationRole:
-            return data.iconName;
+            return data.icon;
+        case Qt::UserRole + 1:
+            return data.icon.name();
         case Qt::ToolTipRole:
             return data.description;
     }
@@ -273,20 +275,27 @@ void OptionsModel::setSelectedIndex(int index)
     Q_ASSERT (index >= 0 && index < m_data.count());
     if (m_index != index) {
         m_index = index;
-        emit valueChanged(index);
+        emit valueChanged(value());
     }
 }
 
 QVariant OptionsModel::value() const
 {
+    if (m_data.isEmpty()) {
+        return QVariant();
+    }
     return m_data.at(m_index).value;
 }
 
 void OptionsModel::setValue(QVariant value)
 {
+    if (this->value() == value) {
+        return;
+    }
     for (int index = 0; index < m_data.count(); index++) {
         if (m_data.at(index).value == value) {
             setSelectedIndex(index);
+            break;
         }
     }
 }

@@ -106,7 +106,7 @@ QVariant RulesModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-bool RulesModel::setData(const QModelIndex & index, const QVariant & value, int role)
+bool RulesModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (!index.isValid() || index.column() != 0 || index.row() < 0 || index.row() >= int(m_ruleList.size())) {
         return false;
@@ -177,8 +177,8 @@ bool RulesModel::isWarningShown()
     const bool no_wmclass = !m_rules["wmclass"]->isEnabled()
                                 || m_rules["wmclass"]->policy() == Rules::UnimportantMatch;
     const bool alltypes = !m_rules["types"]->isEnabled()
-                              || m_rules["types"]->value() == 0
-                              || m_rules["types"]->value() == 0x3FF;
+                              || (m_rules["types"]->value() == 0)
+                              || ((m_rules["types"]->value().toInt() | (1 << NET::Override)) == 0x3FF);
 
     return (no_wmclass && alltypes);
 }
@@ -192,6 +192,8 @@ void RulesModel::init()
     for (RuleItem *rule : qAsConst(m_ruleList)) {
         rule->reset();
 
+        //FIXME: After Qt 5.14 the QML ComboBox will allow to use `setData()` directly
+        //       No need to connect this signals
         const QModelIndex index = this->index(row, 0);
         connect(rule, &RuleItem::valueChanged,  this, [this, index](QVariant value){ setData(index, value, RulesModel::ValueRole); });
         connect(rule, &RuleItem::policyChanged, this, [this, index](QVariant policy){ setData(index, policy, RulesModel::PolicyRole); });
@@ -438,7 +440,7 @@ void RulesModel::initRuleList()
     addRule(new RuleItem(QLatin1String("placement"),
                          RulePolicy::ForceRule, RuleType::Option,
                          i18n("Initial placement"), i18n("Size & Position"),
-                         QStringLiteral("preferences-system-windows-effect-presentwindows"),
+                         QStringLiteral("region"),
                          placementModelData()));
 
     addRule(new RuleItem(QLatin1String("ignoregeometry"),
@@ -618,26 +620,31 @@ const QHash<QString, QString> RulesModel::x11PropertyHash()
 QList<OptionsModel::Data> RulesModel::windowTypesModelData() const
 {
     return {
-        { NET::Normal,  i18n("Normal Window")      },
-        { NET::Dialog,  i18n("Dialog Window")      },
-        { NET::Utility, i18n("Utility Window")     },
-        { NET::Dock,    i18n("Dock (panel)")       },
-        { NET::Toolbar, i18n("Toolbar")            },
-        { NET::Menu,    i18n("Torn-Off Menu")      },
-        { NET::Splash,  i18n("Splash Screen")      },
-        { NET::Desktop, i18n("Desktop")            },
+        //TODO: Find/create better icons
+        { NET::Normal,  i18n("Normal Window")     , QStringLiteral("window") },
+        { NET::Dialog,  i18n("Dialog Window")     , QStringLiteral("window-duplicate")         },
+        { NET::Utility, i18n("Utility Window")    , QStringLiteral("dialog-object-properties") },
+        { NET::Dock,    i18n("Dock (panel)")      , QStringLiteral("list-remove")              },
+        { NET::Toolbar, i18n("Toolbar")           , QStringLiteral("tools")                    },
+        { NET::Menu,    i18n("Torn-Off Menu")     , QStringLiteral("overflow-menu-left")       },
+        { NET::Splash,  i18n("Splash Screen")     , QStringLiteral("embosstool")               },
+        { NET::Desktop, i18n("Desktop")           , QStringLiteral("desktop")                  },
 //        { NET::Override,i18n("Unmanaged Window")   },  deprecated
-        { NET::TopMenu, i18n("Standalone Menubar") }
+        { NET::TopMenu, i18n("Standalone Menubar"), QStringLiteral("open-menu-symbolic")       }
     };
 }
 
 QList<OptionsModel::Data> RulesModel::virtualDesktopsModelData() const
 {
     QList<OptionsModel::Data> modelData;
-    for (int i = 1; i <= KWindowSystem::numberOfDesktops(); ++i) {
-        modelData << OptionsModel::Data{ i, QString::number(i).rightJustified(2) + ':' + KWindowSystem::desktopName(i) };
+    for (int desktopId = 1; desktopId <= KWindowSystem::numberOfDesktops(); ++desktopId) {
+        modelData << OptionsModel::Data{
+            desktopId,
+            QString::number(desktopId).rightJustified(2) + QStringLiteral(": ") + KWindowSystem::desktopName(desktopId),
+            QStringLiteral("virtual-desktops")
+        };
     }
-    modelData << OptionsModel::Data{ NET::OnAllDesktops, i18n("All Desktops") };
+    modelData << OptionsModel::Data{ NET::OnAllDesktops, i18n("All Desktops"), QStringLiteral("window-pin") };
     return modelData;
 }
 
@@ -647,16 +654,18 @@ QList<OptionsModel::Data> RulesModel::activitiesModelData() const
 #ifdef KWIN_BUILD_ACTIVITIES
     QList<OptionsModel::Data> modelData;
 
-    // cloned from kactivities/src/lib/core/consumer.cpp
-    #define NULL_UUID "00000000-0000-0000-0000-000000000000"
-    modelData << OptionsModel::Data{ QString::fromLatin1(NULL_UUID), i18n("All Activities") };
-    #undef NULL_UUID
+    // NULL_ID from kactivities/src/lib/core/consumer.cpp
+    modelData << OptionsModel::Data{
+        QString::fromLatin1("00000000-0000-0000-0000-000000000000"),
+        i18n("All Activities"),
+        QStringLiteral("activities")
+    };
 
     const auto activities = m_activities->activities(KActivities::Info::Running);
     if (m_activities->serviceStatus() == KActivities::Consumer::Running) {
         for (const QString &activityId : activities) {
             const KActivities::Info info(activityId);
-            modelData << OptionsModel::Data{ activityId, info.name() };
+            modelData << OptionsModel::Data{ activityId, info.name(), info.icon() };
         }
     }
 
@@ -698,17 +707,18 @@ QList<OptionsModel::Data> RulesModel::colorSchemesModelData() const
 {
     QList<OptionsModel::Data> modelData;
 
-    KColorSchemeManager *schemes = new KColorSchemeManager();
-    QAbstractItemModel *schemesModel = schemes->model();
+    KColorSchemeManager schemes;
+    QAbstractItemModel *schemesModel = schemes.model();
 
-    for (int r = 0; r < schemesModel->rowCount(); r++) {
+    // Skip row 0, which is Default scheme
+    for (int r = 1; r < schemesModel->rowCount(); r++) {
         QModelIndex index = schemesModel->index(r, 0);
-        const QString fileName = QFileInfo(schemesModel->data(index, Qt::UserRole).toString()).baseName();
-        const QString name = schemesModel->data(index, Qt::DisplayRole).toString();
-        modelData << OptionsModel::Data{ fileName, name };
+        modelData << OptionsModel::Data{
+            QFileInfo(schemesModel->data(index, Qt::UserRole).toString()).baseName(),
+            schemesModel->data(index, Qt::DisplayRole).toString(),
+            schemesModel->data(index, Qt::DecorationRole).value<QIcon>()
+        };
     }
-
-    delete schemes;
 
     return modelData;
 }
