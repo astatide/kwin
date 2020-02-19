@@ -61,23 +61,26 @@ QQC2.ItemDelegate {
         }
 
         QQC2.CheckBox {
+            id: itemEnabled
             opacity: model.selectable ? 1 : 0
             checked: model.enabled
             onToggled: { model.enabled = checked; }
         }
-/*
+
         Kirigami.Icon {
+            id: itemIcon
             source: model.icon
-            Layout.preferredHeight: Kirigami.Units.iconSizes.medium
-            Layout.preferredWidth: Kirigami.Units.iconSizes.medium
-*/
-        QQC2.ToolButton {
-            icon.name: model.iconName
-            QQC2.ToolTip.text: model.description
-            QQC2.ToolTip.visible: (down || hovered) && (model.description != "")
+            Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+            Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            QQC2.ToolTip {
+                text: model.description
+                visible: hovered && (model.description != "")
+            }
         }
 
         QQC2.Label {
+            id: itemLabel
             text: model.name
             Layout.fillWidth: true
         }
