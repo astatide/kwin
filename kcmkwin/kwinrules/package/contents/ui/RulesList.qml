@@ -32,6 +32,7 @@ ScrollViewKCM {
     property Item dropItem: (dropIndex >= 0) ? rulesListView.contentItem.children[dropIndex]
                                              : rulesListKCM
 
+    ConfigModule.columnWidth: 20 * Kirigami.Units.gridUnit
     ConfigModule.buttons: ConfigModule.Help | ConfigModule.Apply
 
     view: ListView {

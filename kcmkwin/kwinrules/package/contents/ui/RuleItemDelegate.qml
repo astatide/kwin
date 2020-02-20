@@ -82,12 +82,18 @@ QQC2.ItemDelegate {
         QQC2.Label {
             id: itemLabel
             text: model.name
+            Layout.minimumWidth: 12 * Kirigami.Units.gridUnit
+        }
+
+        Item {
             Layout.fillWidth: true
         }
 
         OptionsComboBox {
             id: policyCombo
-            Layout.preferredWidth: 9 * Kirigami.Units.gridUnit
+            Layout.minimumWidth: 6 * Kirigami.Units.gridUnit
+            Layout.maximumWidth: 12 * Kirigami.Units.gridUnit
+            Layout.fillWidth: true
             flat: true
 
             visible: count > 0
@@ -102,10 +108,13 @@ QQC2.ItemDelegate {
 
         ValueEditor {
             id: valueEditor
-            Layout.preferredWidth: policyCombo.visible ? 11 * Kirigami.Units.gridUnit
-                                                       : 20 * Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+            Layout.minimumWidth: 9 * Kirigami.Units.gridUnit
+            Layout.maximumWidth: policyCombo.visible ? 20 * Kirigami.Units.gridUnit
+                                                     : 32 * Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+            Layout.fillWidth: true
             Layout.alignment: Qt.AlignRight
-            enabled: itemIsEnabled // && model.policy > 0 (or 1)
+
+            enabled: itemIsEnabled
 
             ruleValue: model.value
             ruleOptions: model.options
