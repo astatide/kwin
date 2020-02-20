@@ -88,6 +88,7 @@ public:
     void setValue(QVariant value);
 
     QVariant options() const;
+    void setOptionsData(const QList<OptionsModel::Data> &data);
 
     RulePolicy::Type policyType() const;
     int policy() const;          // int belongs to anonymous enum in Rules::
@@ -96,15 +97,6 @@ public:
     QString policyKey() const;
 
     void reset();
-
-public slots:
-    void setOptionsData(const QList<OptionsModel::Data> &data);
-
-//FIXME: After Qt 5.14 the QML ComboBox will allow to use `setValue()` and `setPolicy()` directly
-//       No need to raise this signals
-signals:
-    void valueChanged(QVariant value);
-    void policyChanged(QVariant policy);
 
 private:
     static QVariant typedValue(const QVariant &value, const Type type);

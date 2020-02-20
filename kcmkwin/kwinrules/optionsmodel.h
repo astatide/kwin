@@ -35,7 +35,7 @@ class OptionsModel : public QAbstractListModel
     Q_OBJECT
     //FIXME: After Qt 5.14 the QML ComboBox will allow to use the valueRole directly
     //       instead of changing the index. Remove this exposed property
-    Q_PROPERTY(int selectedIndex READ selectedIndex WRITE setSelectedIndex NOTIFY valueChanged)
+    Q_PROPERTY(int selectedIndex READ selectedIndex NOTIFY valueChanged)
 
 public:
     struct Data {
@@ -67,11 +67,10 @@ public:
     QVariant value() const;
     void setValue(QVariant value);
 
-    //FIXME: Make private or remove after Qt 5.14
-    int selectedIndex() const;
-    void setSelectedIndex(int index);
-
     void updateModelData(const QList<Data> &data);
+
+    //FIXME: Remove after Qt 5.14
+    int selectedIndex() const;
 
 signals:
     void valueChanged(QVariant value);

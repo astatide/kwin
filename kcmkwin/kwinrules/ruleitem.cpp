@@ -72,14 +72,6 @@ RuleItem::RuleItem(const QString &key,
     }
 
     setValue(QVariant());
-
-    //FIXME: After Qt 5.14 the QML ComboBox will allow to use `setValue()` and `setPolicy()` directly
-    //       No need to raise this signals
-    connect(p, &OptionsModel::valueChanged, this, &RuleItem::policyChanged);
-    if (o) {
-        connect(o, &OptionsModel::valueChanged, this, [this]{ d->m_value = o->value(); });
-        connect(o, &OptionsModel::valueChanged, this, &RuleItem::valueChanged);
-    }
 }
 
 RuleItem::~RuleItem()
@@ -91,14 +83,9 @@ RuleItem::~RuleItem()
 
 void RuleItem::reset()
 {
-    const bool oldBlocked = signalsBlocked();
-    blockSignals(true);
-
     setValue(QVariant());
     setPolicy(Rules::Unused);
     setEnabled(hasFlag(AlwaysEnabled) | hasFlag(StartEnabled));
-
-    blockSignals(oldBlocked);
 }
 
 QString RuleItem::key() const

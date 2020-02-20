@@ -73,15 +73,6 @@ int OptionsModel::selectedIndex() const
     return m_index;
 }
 
-void OptionsModel::setSelectedIndex(int index)
-{
-    Q_ASSERT (index >= 0 && index < m_data.count());
-    if (m_index != index) {
-        m_index = index;
-        emit valueChanged(value());
-    }
-}
-
 QVariant OptionsModel::value() const
 {
     if (m_data.isEmpty()) {
@@ -96,9 +87,12 @@ void OptionsModel::setValue(QVariant value)
         return;
     }
     for (int index = 0; index < m_data.count(); index++) {
-        if (m_data.at(index).value == value) {
-            setSelectedIndex(index);
-            break;
+        if (m_data.at(index).value != value) {
+            continue;
+        }
+        if (m_index != index) {
+            m_index = index;
+            emit valueChanged(value);
         }
     }
 }

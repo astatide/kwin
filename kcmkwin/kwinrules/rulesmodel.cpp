@@ -128,15 +128,6 @@ bool RulesModel::setData(const QModelIndex &index, const QVariant &value, int ro
         return false;
     }
 
-    emitDataUpdated(index, role);
-
-    return true;
-}
-
-void RulesModel::emitDataUpdated(const QModelIndex &index, int role)
-{
-    const RuleItem *rule = m_ruleList.at(index.row());
-
     emit dataChanged(index, index, QVector<int>{role});
 
     if (rule->hasFlag(RuleItem::AffectsDescription)) {
@@ -145,6 +136,8 @@ void RulesModel::emitDataUpdated(const QModelIndex &index, int role)
     if (rule->hasFlag(RuleItem::AffectsWarning)) {
         emit showWarningChanged();
     }
+
+    return true;
 }
 
 RuleItem *RulesModel::addRule(RuleItem *rule)
@@ -205,20 +198,9 @@ bool RulesModel::isWarningShown() const
 void RulesModel::initRules()
 {
     beginResetModel();
-
-    int row = 0;
     for (RuleItem *rule : qAsConst(m_ruleList)) {
         rule->reset();
-
-        //FIXME: After Qt 5.14 the QML ComboBox will allow to use `setData()` directly
-        //       No need to connect this signals
-        const QModelIndex index = this->index(row, 0);
-        connect(rule, &RuleItem::valueChanged,  this, [this, index]{ emitDataUpdated(index, RulesModel::ValueRole); });
-        connect(rule, &RuleItem::policyChanged, this, [this, index]{ emitDataUpdated(index, RulesModel::PolicyRole); });
-
-        row++;
     }
-
     endResetModel();
 
     emit descriptionChanged();
@@ -235,8 +217,6 @@ void RulesModel::readFromConfig(KConfigGroup *config)
             continue;
         }
 
-        rule->blockSignals(true);
-
         rule->setEnabled(true);
 
         const QVariant value = config->readEntry(rule->key());
@@ -246,8 +226,6 @@ void RulesModel::readFromConfig(KConfigGroup *config)
             const int policy = config->readEntry(rule->policyKey(), int());
             rule->setPolicy(policy);
         }
-
-        rule->blockSignals(false);
     }
 
     endResetModel();

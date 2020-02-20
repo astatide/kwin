@@ -91,7 +91,6 @@ private:
     void populateRuleList();
     RuleItem *addRule(RuleItem *rule);
     QString defaultDescription() const;
-    void emitDataUpdated(const QModelIndex &index, int role);
 
     static const QHash<QString, QString> x11PropertyHash();
 
