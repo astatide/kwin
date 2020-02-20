@@ -82,7 +82,7 @@ QQC2.ItemDelegate {
             Layout.fillWidth: true
         }
 
-        QQC2.ComboBox {
+        OptionsComboBox {
             id: policyCombo
             Layout.preferredWidth: 9 * Kirigami.Units.gridUnit
             flat: true
@@ -91,16 +91,10 @@ QQC2.ItemDelegate {
             enabled: itemIsEnabled
 
             model: policyModel
-            textRole: "text"
-            currentIndex: model.selectedIndex
             onActivated: {
                 print ("Policy changed for rule " + key + ": policyIndex = " + index);
-                model.selectedIndex = currentIndex;
+                policy = currentValue;
             }
-            //FIXME: After Qt 5.14
-            //valueRole: "value"
-            //currentValue: policy
-            //onActivated: { policy = currentValue; }
         }
 
         ValueEditor {

@@ -94,39 +94,12 @@ Loader {
 
     Component {
         id: optionEditor
-        QQC2.ComboBox {
-            id: optionCombo
+        OptionsComboBox {
             flat: true
-            textRole: "text"
-
-            delegate: QQC2.ItemDelegate {
-                Kirigami.Theme.colorSet: Kirigami.Theme.View
-                width: parent.width
-                highlighted: optionCombo.highlightedIndex == index
-                contentItem: RowLayout {
-                    Kirigami.Icon {
-                        source: model.icon
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                    }
-                    QQC2.Label {
-                        text: model.text
-                        color: highlighted ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
-                        Layout.fillWidth: true
-                    }
-                }
-            }
-
             model: ruleOptions
-            currentIndex: model.selectedIndex
-            onActivated: {
-                print ("Rule changed: " + key + " INDEX := " + currentIndex);
-                model.selectedIndex = currentIndex;
+            onActivated: (index) => {
+                valueEditor.valueEdited(currentValue);
             }
-            //FIXME: After Qt 5.14
-            //valueRole: "value"
-            //currentValue: ruleValue
-            //onActivated: { valueEditor.valueEdited(currentValue); }
         }
     }
 
