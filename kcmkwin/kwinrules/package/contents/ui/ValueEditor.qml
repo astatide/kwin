@@ -24,6 +24,7 @@ import QtQuick.Controls 2.12 as QQC2
 
 import org.kde.kirigami 2.10 as Kirigami
 import org.kde.kquickcontrols 2.0 as KQC
+import org.kde.kcms.kwinrules 1.0
 
 
 Loader {
@@ -37,16 +38,15 @@ Loader {
     signal valueEdited(var value)
 
     sourceComponent: {
-        //FIXME: Use enum from C++ model when exported
         switch (controlType) {
-            case 1: return booleanEditor          //RuleType.Boolean
-            case 2: return stringEditor           //RuleType.String
-            case 3: return integerEditor          //RuleType.Integer
-            case 4: return optionEditor           //RuleType.Option
-            case 5: return flagsEditor            //RuleType.FlagsOption
-            case 6: return percentageEditor       //RuleType.Percentage
-            case 7: return coordinateEditor       //RuleType.Coordinate
-            case 8: return shortcutEditor         //RuleType.Shortcut
+            case RuleItem.Boolean: return booleanEditor
+            case RuleItem.String: return stringEditor
+            case RuleItem.Integer: return integerEditor
+            case RuleItem.Option: return optionEditor
+            case RuleItem.FlagsOption: return flagsEditor
+            case RuleItem.Percentage: return percentageEditor
+            case RuleItem.Coordinate: return coordinateEditor
+            case RuleItem.Shortcut: return shortcutEditor
             default: return emptyEditor
         }
     }

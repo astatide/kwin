@@ -47,6 +47,7 @@ public:
         Coordinate,
         Shortcut
     };
+    Q_ENUM(Type)
 
     enum Flags {
         NoFlags            = 0,
@@ -58,6 +59,7 @@ public:
     };
 
 public:
+    RuleItem() {};
     RuleItem(const QString &key,
              const RulePolicy::Type policyType,
              const Type type,

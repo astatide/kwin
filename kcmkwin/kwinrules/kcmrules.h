@@ -28,8 +28,6 @@
 #include <KConfig>
 #include <KQuickAddons/ConfigModule>
 
-class QAbstractItemModel;
-class QQuickItem;
 
 namespace KWin
 {
@@ -72,9 +70,6 @@ private:
     KConfig *m_rulesConfig;
     QStringList m_rulesListModel;
     RulesModel* m_rulesModel;
-
-    //QList<KWin::Rules *> m_rulesList;
-
 };
 
 } // namespace

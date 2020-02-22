@@ -20,8 +20,6 @@
 
 #include "ruleitem.h"
 
-#include <KLocalizedString>
-
 
 namespace KWin
 {
