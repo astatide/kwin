@@ -92,9 +92,15 @@ void OptionsModel::setValue(QVariant value)
         }
         if (m_index != index) {
             m_index = index;
-            emit valueChanged(value);
+            emit selectedIndexChanged(index);
         }
     }
+}
+
+void OptionsModel::resetValue()
+{
+    m_index = 0;
+    emit selectedIndexChanged(m_index);
 }
 
 void OptionsModel::updateModelData(const QList<Data> &data) {

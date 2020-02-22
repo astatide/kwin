@@ -69,7 +69,7 @@ RuleItem::RuleItem(const QString &key,
         o = new OptionsModel(options);
     }
 
-    setValue(QVariant());
+    reset();
 }
 
 RuleItem::~RuleItem()
@@ -81,9 +81,12 @@ RuleItem::~RuleItem()
 
 void RuleItem::reset()
 {
-    setValue(QVariant());
-    setPolicy(Rules::Unused);
-    setEnabled(hasFlag(AlwaysEnabled) | hasFlag(StartEnabled));
+    d->m_enabled = hasFlag(AlwaysEnabled) | hasFlag(StartEnabled);
+    d->m_value = typedValue(QVariant(), d->m_type);
+    p->resetValue();
+    if (o) {
+        o->resetValue();
+    }
 }
 
 QString RuleItem::key() const
