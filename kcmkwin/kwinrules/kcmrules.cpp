@@ -225,10 +225,6 @@ void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
         toGroup.deleteGroup();  // delete group before copying to avoid old properties
         fromGroup.copyTo(&toGroup);
         toGroup = fromGroup;
-
-        if (m_editIndex == index + moveDir) {
-            m_editIndex = index;
-        }
     }
 
     // Save auxliar into destination group
@@ -236,8 +232,17 @@ void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
     auxGroup.copyTo(&toGroup);
     auxGroup.deleteGroup();
 
+    // Update editIndex
     if (m_editIndex == sourceIndex) {
         m_editIndex = destIndex;
+    } else if (sourceIndex < destIndex) {
+        if (m_editIndex > sourceIndex && m_editIndex <= destIndex) {
+            m_editIndex -= 1;
+        }
+    } else if (sourceIndex > destIndex) {
+        if (m_editIndex < sourceIndex && m_editIndex >= destIndex) {
+            m_editIndex += 1;
+        }
     }
 }
 
