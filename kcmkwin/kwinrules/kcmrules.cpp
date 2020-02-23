@@ -19,9 +19,6 @@
  */
 
 #include "kcmrules.h"
-#include <config-kwin.h>
-
-#include <QQmlEngine>
 
 #include <KAboutData>
 #include <KLocalizedString>
@@ -46,9 +43,6 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
     , m_rulesConfig(new KConfig(s_configFile))
     , m_rulesModel(new RulesModel(this))
 {
-    qmlRegisterUncreatableType<RuleItem>("org.kde.kcms.kwinrules", 1, 0, "RuleItem",
-                                         QStringLiteral("Do not create objects of type RuleItem"));
-
     auto about = new KAboutData(QStringLiteral("kcm_kwinrules_qml"),
                                 i18n("Window Rules"),
                                 QStringLiteral("1.0"),

@@ -24,6 +24,7 @@
 
 #include <QFileInfo>
 #include <QIcon>
+#include <QQmlEngine>
 #include <QTemporaryFile>
 
 #include <KColorSchemeManager>
@@ -37,6 +38,9 @@ namespace KWin
 RulesModel::RulesModel(QObject *parent)
     : QAbstractListModel(parent)
 {
+    qmlRegisterUncreatableType<RuleItem>("org.kde.kcms.kwinrules", 1, 0, "RuleItem",
+                                         QStringLiteral("Do not create objects of type RuleItem"));
+
     populateRuleList();
 }
 
