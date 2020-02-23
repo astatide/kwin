@@ -45,6 +45,7 @@ ScrollViewKCM {
             width: rulesListView.width
             sourceComponent: rulesListDelegate
         }
+        currentIndex: kcm.editIndex
 
         Rectangle {
             id: dropIndicator
@@ -82,8 +83,8 @@ ScrollViewKCM {
         Kirigami.AbstractListItem {
             id: rulesListItem
 
+            highlighted: kcm.editIndex == index
             onClicked: {
-                rulesListView.currentIndex = index
                 kcm.editRule(index);
             }
 

@@ -107,6 +107,7 @@ void KCMKWinRules::updateState()
     KConfigGroup cfg(m_rulesConfig, "General");
     cfg.writeEntry("count", m_rulesListModel.count());
 
+    emit editIndexChanged();
     emit rulesListModelChanged();
 
     updateNeedsSave();
@@ -152,6 +153,11 @@ void KCMKWinRules::newRule()
     pushRulesEditor();
 }
 
+int KCMKWinRules::editIndex() const
+{
+    return m_editIndex;
+}
+
 void KCMKWinRules::editRule(int index)
 {
     Q_ASSERT(index >= 0 && index < m_rulesListModel.count());
@@ -162,6 +168,8 @@ void KCMKWinRules::editRule(int index)
     KConfigGroup cfgGroup = rulesConfigGroup(index);
     m_rulesModel->readFromConfig(&cfgGroup);
     blockSignals(false);
+
+    emit editIndexChanged();
 
     pushRulesEditor();
 }

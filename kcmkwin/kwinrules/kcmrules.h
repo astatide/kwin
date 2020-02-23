@@ -37,6 +37,7 @@ class KCMKWinRules : public KQuickAddons::ConfigModule
     Q_OBJECT
 
     Q_PROPERTY(QStringList rulesListModel READ rulesListModel NOTIFY rulesListModelChanged)
+    Q_PROPERTY(int editIndex READ editIndex() NOTIFY editIndexChanged)
     Q_PROPERTY(RulesModel *rulesModel MEMBER m_rulesModel CONSTANT)
 
 public:
@@ -48,13 +49,16 @@ public slots:
     void save() override;
     void updateNeedsSave();
 
-    void newRule();
+    int editIndex() const;
     void editRule(int index);
+
+    void newRule();
     void removeRule(int index);
     void moveRule(int sourceIndex, int destIndex);
 
 signals:
     void rulesListModelChanged();
+    void editIndexChanged();
 
 private slots:
     void updateState();
