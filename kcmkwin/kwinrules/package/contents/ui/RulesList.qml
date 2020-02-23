@@ -30,7 +30,7 @@ ScrollViewKCM {
     property int dragIndex: -1
     property int dropIndex: -1
     property Item dropItem: (dropIndex >= 0) ? rulesListView.contentItem.children[dropIndex]
-                                             : rulesListKCM
+                                             : rulesListView
 
     ConfigModule.columnWidth: 20 * Kirigami.Units.gridUnit
     ConfigModule.buttons: ConfigModule.Help | ConfigModule.Apply
@@ -82,8 +82,10 @@ ScrollViewKCM {
         Kirigami.AbstractListItem {
             id: rulesListItem
 
-            highlighted: ListView.isCurrentItem
-            onClicked: rulesListView.currentIndex = index
+            onClicked: {
+                rulesListView.currentIndex = index
+                kcm.editRule(index);
+            }
 
             RowLayout {
                 //FIXME: If not used within DelegateRecycler, item goes on top of the first item when clicked
@@ -99,7 +101,6 @@ ScrollViewKCM {
                         print ("(onDropped) from index " + dragIndex + " to " + dropIndex)
                         if (dropIndex >= 0 && dropIndex != dragIndex) {
                             kcm.moveRule(dragIndex, dropIndex);
-                            listView.currentIndex = dropIndex;
                         }
                         dragIndex = -1;
                         dropIndex = -1;
@@ -118,12 +119,6 @@ ScrollViewKCM {
                     focus: false
 
                     actions: [
-                        Kirigami.Action {
-                            text: i18n("Edit")
-                            iconName: "entry-edit"
-                            onTriggered: kcm.editRule(index);
-                        }
-                        ,
                         Kirigami.Action {
                             text: i18n("Export")
                             iconName: "document-export"
