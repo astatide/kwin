@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2004 Lubos Lunak <l.lunak@kde.org>
  * Copyright (c) 2020 Ismael Asensio <isma.af@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
@@ -20,19 +21,16 @@
 
 #include "kcmrules.h"
 
+#include <QtDBus>
+
 #include <KAboutData>
 #include <KLocalizedString>
 #include <KPluginFactory>
 
 
-K_PLUGIN_FACTORY_WITH_JSON(KCMKWinRulesFactory,
-                           "kcm_kwinrules_qml.json",
-                           registerPlugin<KWin::KCMKWinRules>(););
-
-
 namespace
 {
-    const QString s_configFile { QStringLiteral("kwinrulesrc") };
+    const QString s_configFile { QLatin1String("kwinrulesrc") };
 }
 
 namespace KWin
@@ -40,7 +38,7 @@ namespace KWin
 
 KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
     : KQuickAddons::ConfigModule(parent, arguments)
-    , m_rulesConfig(new KConfig(s_configFile))
+    , m_rulesConfig(new KConfig(s_configFile, KConfig::NoGlobals))
     , m_rulesModel(new RulesModel(this))
 {
     auto about = new KAboutData(QStringLiteral("kcm_kwinrules_qml"),
@@ -81,10 +79,11 @@ QStringList KCMKWinRules::rulesListModel() const
 
 void KCMKWinRules::load()
 {
-    m_rulesListModel.clear();
-
-    KConfigGroup cfg(m_rulesConfig, "General");
+    KConfigGroup cfg(m_rulesConfig, QLatin1String("General"));
     int rulesCount = cfg.readEntry("count", 0);
+
+    m_rulesListModel.clear();
+    m_rulesListModel.reserve(rulesCount);
 
     for (int index = 0; index < rulesCount; index++) {
         cfg = rulesConfigGroup(index);
@@ -100,11 +99,14 @@ void KCMKWinRules::save()
 {
     saveCurrentRule();
     m_rulesConfig->sync();
+
+    QDBusMessage message = QDBusMessage::createSignal("/KWin", "org.kde.KWin", "reloadConfig");
+    QDBusConnection::sessionBus().send(message);
 }
 
 void KCMKWinRules::updateState()
 {
-    KConfigGroup cfg(m_rulesConfig, "General");
+    KConfigGroup cfg(m_rulesConfig, QLatin1String("General"));
     cfg.writeEntry("count", m_rulesListModel.count());
 
     emit editIndexChanged();
@@ -254,7 +256,6 @@ void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
     }
 }
 
-
 KConfigGroup KCMKWinRules::rulesConfigGroup(int index) const
 {
     const QString groupName = QString::number(index + 1);
@@ -264,6 +265,9 @@ KConfigGroup KCMKWinRules::rulesConfigGroup(int index) const
     }
     return m_rulesConfig->group(groupName);
 }
+
+
+K_PLUGIN_CLASS_WITH_JSON(KCMKWinRules, "kcm_kwinrules_qml.json");
 
 } // namespace
 
