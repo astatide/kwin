@@ -43,7 +43,6 @@ public:
     explicit KCMKWinRules(QObject *parent, const QVariantList &arguments);
     ~KCMKWinRules();
 
-
 public slots:
     void load() override;
     void save() override;
@@ -63,6 +62,8 @@ private slots:
 private:
     QStringList rulesListModel() const;
     KConfigGroup rulesConfigGroup(int index) const;
+
+    void saveCurrentRule();
     void moveConfigGroup(int sourceIndex, int destIndex);
     void pushRulesEditor();
 
@@ -70,6 +71,8 @@ private:
     KConfig *m_rulesConfig;
     QStringList m_rulesListModel;
     RulesModel* m_rulesModel;
+
+    int m_editIndex = -1;
 };
 
 } // namespace

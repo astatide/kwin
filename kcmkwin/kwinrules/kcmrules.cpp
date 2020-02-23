@@ -65,18 +65,25 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
                       " KWin as your window manager. If you do use a different window manager, please refer to its documentation"
                       " for how to customize window behavior.</p>"));
 
+    connect(m_rulesModel, &RulesModel::descriptionChanged, this, [this]{
+        if (m_editIndex >=0 && m_editIndex < m_rulesListModel.count()) {
+            m_rulesListModel.replace(m_editIndex, m_rulesModel->description());
+            emit rulesListModelChanged();
+        }
+    } );
     connect(m_rulesModel, &RulesModel::dataChanged, this, &KCMKWinRules::updateNeedsSave);
-    //connect(m_rulesModel, &RulesModel::descriptionChanged, this, &KCMKWinRules::load);
 }
 
 KCMKWinRules::~KCMKWinRules() {
     delete m_rulesConfig;
 }
 
+
 QStringList KCMKWinRules::rulesListModel() const
 {
     return m_rulesListModel;
 }
+
 
 void KCMKWinRules::load()
 {
@@ -97,6 +104,7 @@ void KCMKWinRules::load()
 
 void KCMKWinRules::save()
 {
+    saveCurrentRule();
     m_rulesConfig->sync();
 }
 
@@ -124,14 +132,27 @@ void KCMKWinRules::pushRulesEditor()
     setCurrentIndex(1);
 }
 
+void KCMKWinRules::saveCurrentRule()
+{
+    if (m_editIndex < 0) {
+        return;
+    }
+    KConfigGroup cfgGroup = rulesConfigGroup(m_editIndex);
+    m_rulesModel->writeToConfig(&cfgGroup);
+}
+
+
 void KCMKWinRules::newRule()
 {
-    const int newIndex = m_rulesListModel.count();
+    saveCurrentRule();
 
-    KConfigGroup cfgGroup = rulesConfigGroup(newIndex);
+    m_editIndex = m_rulesListModel.count();
+    blockSignals(true);
     m_rulesModel->initRules();
-    m_rulesListModel.append(m_rulesModel->description());
+    saveCurrentRule();
+    blockSignals(false);
 
+    m_rulesListModel.append(m_rulesModel->description());
     updateState();
 
     pushRulesEditor();
@@ -139,14 +160,28 @@ void KCMKWinRules::newRule()
 
 void KCMKWinRules::editRule(int index)
 {
+    Q_ASSERT(index >= 0 && index < m_rulesListModel.count());
+    saveCurrentRule();
+
+    m_editIndex = index;
+    blockSignals(true);
     KConfigGroup cfgGroup = rulesConfigGroup(index);
     m_rulesModel->readFromConfig(&cfgGroup);
+    blockSignals(false);
 
     pushRulesEditor();
 }
 
 void KCMKWinRules::removeRule(int index)
 {
+    Q_ASSERT(index >= 0 && index < m_rulesListModel.count());
+    saveCurrentRule();
+
+    if (m_editIndex == index) {
+        m_editIndex = -1;
+        pop();
+    }
+
     // First move the deleted group to the end, so the other rules get rearranged
     const int lastIndex = m_rulesListModel.count() - 1;
     moveConfigGroup(index, lastIndex);
@@ -166,11 +201,14 @@ void KCMKWinRules::moveRule(int sourceIndex, int destIndex)
         return;
     }
 
+    saveCurrentRule();
+
     moveConfigGroup(sourceIndex, destIndex);
     m_rulesListModel.move(sourceIndex, destIndex);
 
     updateState();
 }
+
 
 void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
 {
@@ -193,12 +231,20 @@ void KCMKWinRules::moveConfigGroup(int sourceIndex, int destIndex)
         toGroup.deleteGroup();  // delete group before copying to avoid old properties
         fromGroup.copyTo(&toGroup);
         toGroup = fromGroup;
+
+        if (m_editIndex == index + moveDir) {
+            m_editIndex = index;
+        }
     }
 
     // Save auxliar into destination group
     toGroup.deleteGroup();
     auxGroup.copyTo(&toGroup);
     auxGroup.deleteGroup();
+
+    if (m_editIndex == sourceIndex) {
+        m_editIndex = destIndex;
+    }
 }
 
 
