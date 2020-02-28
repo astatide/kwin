@@ -67,6 +67,7 @@ KCMKWinRules::KCMKWinRules(QObject *parent, const QVariantList &arguments)
 }
 
 KCMKWinRules::~KCMKWinRules() {
+    m_rulesConfig->markAsClean();
     delete m_rulesConfig;
 }
 
@@ -79,6 +80,9 @@ QStringList KCMKWinRules::rulesListModel() const
 
 void KCMKWinRules::load()
 {
+    m_rulesConfig->markAsClean();
+    m_rulesConfig->reparseConfiguration();
+
     KConfigGroup cfg(m_rulesConfig, QLatin1String("General"));
     int rulesCount = cfg.readEntry("count", 0);
 
@@ -93,6 +97,12 @@ void KCMKWinRules::load()
 
     setNeedsSave(false);
     emit rulesListModelChanged();
+
+    // Reset current rule editor
+    if (m_editIndex > 0) {
+        KConfigGroup cfgGroup = rulesConfigGroup(m_editIndex);
+        m_rulesModel->readFromConfig(&cfgGroup);
+    }
 }
 
 void KCMKWinRules::save()
@@ -118,6 +128,7 @@ void KCMKWinRules::updateState()
 void KCMKWinRules::updateNeedsSave()
 {
     setNeedsSave(true);
+    emit needsSaveChanged();
 }
 
 void KCMKWinRules::pushRulesEditor()
@@ -134,8 +145,10 @@ void KCMKWinRules::saveCurrentRule()
     if (m_editIndex < 0) {
         return;
     }
-    KConfigGroup cfgGroup = rulesConfigGroup(m_editIndex);
-    m_rulesModel->writeToConfig(&cfgGroup);
+    if (needsSave()) {
+        KConfigGroup cfgGroup = rulesConfigGroup(m_editIndex);
+        m_rulesModel->writeToConfig(&cfgGroup);
+    }
 }
 
 
@@ -163,6 +176,7 @@ int KCMKWinRules::editIndex() const
 void KCMKWinRules::editRule(int index)
 {
     Q_ASSERT(index >= 0 && index < m_rulesListModel.count());
+
     saveCurrentRule();
 
     m_editIndex = index;

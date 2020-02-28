@@ -33,7 +33,7 @@ ScrollViewKCM {
                                              : rulesListView
 
     ConfigModule.columnWidth: 20 * Kirigami.Units.gridUnit
-    ConfigModule.buttons: ConfigModule.Help | ConfigModule.Apply
+    ConfigModule.buttons: ConfigModule.Apply
 
     view: ListView {
         id: rulesListView
