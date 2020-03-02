@@ -23,18 +23,14 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12 as QQC2
 import org.kde.kirigami 2.10 as Kirigami
 
-//Kirigami.AbstractListItem {
-// !! crashes on load due to segmentation fault
-// Traceback is not much helpful (Crashing... crashRecursionCounter = 2)
-
-QQC2.ItemDelegate {
+Kirigami.AbstractListItem {
     id: ruleDelegate
 
     property bool showAll: false
     property bool itemIsEnabled: model.enabled
 
     enabled: itemIsEnabled || showAll
-    height: enabled ? 2.1 * Kirigami.Units.gridUnit : 0
+    height: enabled ? implicitHeight : 0
     opacity: (enabled) ? 1 : 0
     focus: true
 
@@ -45,11 +41,6 @@ QQC2.ItemDelegate {
     }
     Behavior on opacity {
         PropertyAnimation { duration: 2 * Kirigami.Units.longDuration }
-    }
-
-    anchors {
-        left: parent.left
-        right: parent.right
     }
 
     RowLayout {
@@ -94,6 +85,7 @@ QQC2.ItemDelegate {
             Layout.minimumWidth: 6 * Kirigami.Units.gridUnit
             Layout.maximumWidth: 12 * Kirigami.Units.gridUnit
             Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
             flat: true
 
             visible: count > 0
@@ -112,7 +104,7 @@ QQC2.ItemDelegate {
             Layout.maximumWidth: policyCombo.visible ? 20 * Kirigami.Units.gridUnit
                                                      : 32 * Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
             Layout.fillWidth: true
-            Layout.alignment: Qt.AlignRight
+            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
             enabled: itemIsEnabled
 

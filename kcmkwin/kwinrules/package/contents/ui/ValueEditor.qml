@@ -149,28 +149,34 @@ Loader {
     Component {
         id: coordinateEditor
         RowLayout {
+            id: coordItem
+            spacing: Kirigami.Units.smallSpacing
+
             property var coords: ruleValue ? ruleValue.split(',') : [0, 0]
+            //FIXME: QML RowLayout: Binding loop detected for property "coordWidth"
+            property int coordWidth: (coordItem.width - coordSeparator.width) / 2 - coordItem.spacing
 
             QQC2.SpinBox {
-                id: coord_x
+                id: coordX
                 editable: true
-                Layout.fillWidth: true
+                Layout.preferredWidth: coordWidth
                 from: 0
                 to: 4098
                 value: coords[0]
-                onValueModified: valueEditor.valueEdited(coord_x.value + "," + coord_y.value)
+                onValueModified: valueEditor.valueEdited(coordX.value + "," + coordY.value)
             }
             QQC2.Label {
-                text: i18nc("(x, y) coordinates separator in size/position"," x ")
+                id: coordSeparator
+                text: i18nc("(x, y) coordinates separator in size/position","x")
             }
             QQC2.SpinBox {
-                id: coord_y
+                id: coordY
                 editable: true
                 from: 0
                 to: 4098
-                Layout.fillWidth: true
+                Layout.preferredWidth: coordWidth
                 value: coords[1]
-                onValueModified: valueEditor.valueEdited(coord_x.value + "," + coord_y.value)
+                onValueModified: valueEditor.valueEdited(coordX.value + "," + coordY.value)
             }
         }
     }
@@ -182,9 +188,8 @@ Loader {
                 Layout.fillWidth: true
             }
             KQC.KeySequenceItem {
-                //FIXME: KeySequenceItem.qml:14:5: QML KeySequenceHelper: Binding loop detected for property "keySequence"
                 keySequence: ruleValue
-                onKeySequenceChanged: valueEditor.valueEdited(keySequence)
+                onCaptureFinished: valueEditor.valueEdited(keySequence)
             }
         }
     }
