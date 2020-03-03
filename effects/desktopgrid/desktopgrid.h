@@ -25,13 +25,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <kwineffects.h>
 #include <QObject>
 #include <QTimeLine>
-
-#include "kwineffectquickview.h"
+#include <QQuickView>
 
 namespace KWin
 {
 
 class PresentWindowsEffectProxy;
+
+class DesktopButtonsView : public QQuickView
+{
+    Q_OBJECT
+public:
+    explicit DesktopButtonsView(QWindow *parent = nullptr);
+    void windowInputMouseEvent(QMouseEvent* e);
+    void setAddDesktopEnabled(bool enable);
+    void setRemoveDesktopEnabled(bool enable);
+    bool isVisible() const;
+    void show();
+    void hide();
+public:
+    EffectWindow *effectWindow;
+Q_SIGNALS:
+    void addDesktop();
+    void removeDesktop();
+private:
+    bool m_visible;
+    QPoint m_pos;
+    bool m_posIsValid;
+};
 
 class DesktopGridEffect
     : public Effect
@@ -94,7 +115,8 @@ private Q_SLOTS:
     void slotWindowClosed(KWin::EffectWindow *w);
     void slotWindowDeleted(KWin::EffectWindow *w);
     void slotNumberDesktopsChanged(uint old);
-    void slotWindowFrameGeometryChanged(KWin::EffectWindow *w, const QRect &old);
+    void slotWindowGeometryShapeChanged(KWin::EffectWindow *w, const QRect &old);
+    void slotDesktopChanged(int old, int current, KWin::EffectWindow* w);
 
 private:
     QPointF scalePos(const QPoint& pos, int desktop, int screen = -1) const;
@@ -121,13 +143,21 @@ private:
 
     QList<ElectricBorder> borderActivate;
     int zoomDuration;
+    int slideDuration;
+    int shrinkDuration;
     int border;
+    int left_or_right;
+    EffectFrame* thumbnailWindowFrame;
     Qt::Alignment desktopNameAlignment;
     int layoutMode;
     int customLayoutRows;
 
     bool activated;
     QTimeLine timeline;
+    QTimeLine slideTimeline;
+    QTimeLine shrinkTimeline;
+    QPoint slideMoveDiff;
+    int barHeight;
     int paintingDesktop;
     int highlightedDesktop;
     int sourceDesktop;
@@ -144,10 +174,12 @@ private:
     QList< EffectFrame* > desktopNames;
 
     QSize gridSize;
+    int dockSize;
     Qt::Orientation orientation;
     QPoint activeCell;
     // Per screen variables
     QList<double> scale; // Because the border isn't a ratio each screen is different
+    QList<double> scaleLarge;
     QList<double> unscaledBorder;
     QList<QSizeF> scaledSize;
     QList<QPointF> scaledOffset;
@@ -161,7 +193,7 @@ private:
     QRect m_windowMoveGeometry;
     QPoint m_windowMoveStartPoint;
 
-    QVector<EffectQuickScene*> m_desktopButtons;
+    QVector<DesktopButtonsView*> m_desktopButtonsViews;
 
     QAction *m_activateAction;
 
